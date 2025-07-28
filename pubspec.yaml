@@ -11,6 +11,11 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   get: ^4.6.6
+  confetti: ^0.7.0
+  flutter_tts: ^4.0.2
+  google_fonts: ^5.0.0
+  flutter_animate:
+  haptic_feedback: ^0.2.0
 
 dev_dependencies:
   flutter_test:
@@ -19,6 +24,19 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  
+
   assets:
     - assets/home_screen/
+    - assets/fonts/
+
+  fonts:
+    - family: Baloo2
+      fonts:
+        - asset: assets/fonts/static/Baloo2-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/static/Baloo2-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/static/Baloo2-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/static/Baloo2-SemiBold.ttf
+          weight: 600

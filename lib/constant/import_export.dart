@@ -4,3 +4,7 @@ export 'package:get/get_navigation/src/root/get_material_app.dart';
 export 'package:get/get.dart';
 export 'package:nextgen_learners/constant/string_constant.dart';
 export 'package:nextgen_learners/constant/CustomContainer.dart';
+export 'package:nextgen_learners/view/animal_name/animal_name_view.dart';
+export 'package:nextgen_learners/view/animal_sound/animal_sound_view.dart';
+export 'package:nextgen_learners/view/math/math_view.dart';
+export 'package:nextgen_learners/view/vehicals/vehicals_view.dart';

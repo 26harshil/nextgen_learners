@@ -14,9 +14,20 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        fontFamily: "Baloo2",
+        textTheme: Theme.of(context).textTheme.apply(
+          fontFamily: 'Baloo2', // Reinforce the font family
+        ),
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
       home: Dashboard(),
+
+      getPages: [
+        GetPage(name: ANIMAL_Name_SCREEN, page: () => AnimalNameView()),
+        GetPage(name: ANIMAL_SOUND_SCREEN, page: () => AnimalSoundView()),
+        GetPage(name: MATH_SCREEN, page: () => MathViews()),
+        GetPage(name: VEHICLE_NAME_SCREEN, page: () => VehicalsView()),
+      ],
     );
   }
 }
