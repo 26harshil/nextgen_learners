@@ -643,69 +643,81 @@ class _MathViewsState extends State<MathViews> with TickerProviderStateMixin {
       },
     );
   }
-
-  Widget _buildActionButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _buildEnhancedButton(
+Widget _buildActionButtons() {
+  final screenWidth = MediaQuery.of(context).size.width;
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    children: [
+      Flexible(
+        flex: 1,
+        child: _buildEnhancedButton(
           label: isAnswerSubmitted ? 'Next Question' : 'Submit Answer',
           icon: isAnswerSubmitted ? Icons.arrow_forward : Icons.send,
           color: Colors.purple[600]!,
           onPressed: isAnswerSubmitted ? _nextQuestion : submitAnswer,
           enabled: selectedAnswer != null,
         ),
-        _buildEnhancedButton(
+      ),
+      const SizedBox(width: 16),
+      Flexible(
+        flex: 1,
+        child: _buildEnhancedButton(
           label: showHint ? 'Hide Hint' : 'Show Hint',
           icon: Icons.lightbulb_outline,
           color: Colors.amber[600]!,
           onPressed: toggleHint,
         ),
-      ],
-    );
-  }
-
-  Widget _buildEnhancedButton({
-    required String label,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onPressed,
-    bool enabled = true,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: enabled ? [
-          BoxShadow(
-            color: color.withOpacity(0.4),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ] : null,
       ),
-      child: ElevatedButton.icon(
-        onPressed: enabled ? onPressed : null,
-        icon: Icon(icon, size: 20),
-        label: Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: enabled ? color : Colors.grey[400],
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(25),
-          ),
-          elevation: enabled ? 8 : 2,
-        ),
-      ),
-    );
-  }
+    ],
+  );
+}
 
+Widget _buildEnhancedButton({
+  required String label,
+  required IconData icon,
+  required Color color,
+  required VoidCallback onPressed,
+  bool enabled = true,
+}) {
+  final screenWidth = MediaQuery.of(context).size.width;
+  final padding = screenWidth < 400 ? const EdgeInsets.symmetric(horizontal: 12, vertical: 10) : const EdgeInsets.symmetric(horizontal: 16, vertical: 12);
+
+  return Container(
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(25),
+      boxShadow: enabled
+          ? [
+              BoxShadow(
+                color: color.withOpacity(0.4),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ]
+          : null,
+    ),
+    child: ElevatedButton.icon(
+      onPressed: enabled ? onPressed : null,
+      icon: Icon(icon, size: screenWidth < 400 ? 18 : 20),
+      label: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: screenWidth < 400 ? 14 : 16,
+          fontWeight: FontWeight.w600,
+        ),
+        overflow: TextOverflow.ellipsis,
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: enabled ? color : Colors.grey[400],
+        foregroundColor: Colors.white,
+        padding: padding,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(25),
+        ),
+        elevation: enabled ? 8 : 2,
+      ),
+    ),
+  );
+}
   void _showEnhancedDialog({
     required String title,
     required String message,

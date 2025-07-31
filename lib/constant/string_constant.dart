@@ -16,7 +16,7 @@ const Color MATH_COLOR_SOFT_PINK = Color(0xFFFFCCCC); // Full opacity
 const Color VEHICLES_COLOR_LIGHT_BLUE = Color(0xFFADD8E6); // Full opacity
 const Color VEHICLES_COLOR_SKY_BLUE = Color(0xFF87CEEB);
 
- // Full opacity
+// Full opacity
 //endregion
 
 //resionStarts
@@ -24,4 +24,6 @@ const String ANIMAL_Name_SCREEN = '/animal-name';
 const String ANIMAL_SOUND_SCREEN = '/animal-sound';
 const String MATH_SCREEN = '/math-screen';
 const String VEHICLE_NAME_SCREEN = '/vehicle-name';
+const String DASHBOARD_SCREEN = '/dashboard';
+const String SPLASH_SCREEN = '/splash_screen';
 //regionend
