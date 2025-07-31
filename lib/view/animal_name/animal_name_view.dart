@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:nextgen_learners/constant/import_export.dart';
 
 class AnimalNameView extends StatefulWidget {
   const AnimalNameView({super.key});
@@ -16,28 +16,34 @@ class _AnimalQuizState extends State<AnimalNameView> {
 
   final List<Map<String, dynamic>> questions = [
     {
-      'image': 'assets/animals/lion.png',
+      'image':
+          'https://tse1.mm.bing.net/th/id/OIP.PtoTy3zxmq89LA_fx2_rbAHaHq?rs=1&pid=ImgDetMain&o=7&rm=3',
       'question': 'Which animal is known as the King of the Jungle?',
       'options': ['Elephant', 'Tiger', 'Lion', 'Bear'],
       'answer': 'Lion',
       'hint': 'This animal is a big cat with a majestic mane.',
-      'funFact': '🦁 Lions are called the King of the Jungle because of their strength, leadership, and majestic appearance. They live in groups called prides.'
+      'funFact':
+          '🦁 Lions are called the King of the Jungle because of their strength, leadership, and majestic appearance. They live in groups called prides.',
     },
     {
-      'image': 'assets/animals/zebra.png',
+      'image':
+          'https://tse3.mm.bing.net/th/id/OIP.TGg5wMD-jRwcZyz1IxXH6gHaIN?w=1154&h=1280&rs=1&pid=ImgDetMain&o=7&rm=3',
       'question': 'Which animal has black and white stripes?',
       'options': ['Leopard', 'Giraffe', 'Zebra', 'Cow'],
       'answer': 'Zebra',
       'hint': 'This animal’s pattern is unique like a fingerprint.',
-      'funFact': '🦓 Each zebra has a unique stripe pattern, which helps them blend into the grasslands and confuse predators.'
+      'funFact':
+          '🦓 Each zebra has a unique stripe pattern, which helps them blend into the grasslands and confuse predators.',
     },
     {
-      'image': 'assets/animals/elephant.png',
+      'image':
+          'https://img.freepik.com/premium-vector/cute-elephant-cartoon_160606-195.jpg?w=2000',
       'question': 'Which animal is the largest land mammal?',
       'options': ['Hippo', 'Elephant', 'Rhino', 'Buffalo'],
       'answer': 'Elephant',
       'hint': 'This animal has a long trunk and large ears.',
-      'funFact': '🐘 Elephants can weigh up to 6,000 kg. They have long trunks used for drinking water, grabbing food, and social interactions.'
+      'funFact':
+          '🐘 Elephants can weigh up to 6,000 kg. They have long trunks used for drinking water, grabbing food, and social interactions.',
     },
     // Add more questions as needed, following the same structure
     // For brevity, only 3 questions are included here; extend the list to include all 50 questions similarly
@@ -77,16 +83,80 @@ class _AnimalQuizState extends State<AnimalNameView> {
     final currentQuestion = questions[currentQuestionIndex];
 
     return Scaffold(
+      appBar: AppBar(
+        leading: Tooltip(
+          message: 'Back to previous screen',
+          child: InkWell(
+            onTap: () => Get.back(),
+            borderRadius: BorderRadius.circular(16),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Colors.purple[600]!, Colors.purple[400]!],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: const [
+                  BoxShadow(
+                    blurRadius: 6,
+                    color: Colors.black26,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.arrow_back,
+                color: Colors.white,
+                size: 24,
+                semanticLabel: 'Back',
+              ),
+            ),
+          ),
+        ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/home_screen/buddy.png',
+              height: 32,
+              width: 32,
+              fit: BoxFit.contain,
+              semanticLabel: 'Math Adventure Quest Logo',
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Math Quest',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+          ],
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white.withOpacity(0.1),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.purple[100]!.withOpacity(0.3),
+                Colors.pink[100]!.withOpacity(0.3),
+              ],
+            ),
+          ),
+        ),
+        toolbarHeight: 64,
+      ),
+      extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF4CAF50),
-              Color(0xFF2196F3),
-              Color(0xFFFF9800),
-            ],
+            colors: [Color(0xFF4CAF50), Color(0xFF2196F3), Color(0xFFFF9800)],
           ),
         ),
         child: SafeArea(
@@ -95,16 +165,17 @@ class _AnimalQuizState extends State<AnimalNameView> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // App logo/icon
-                Image.asset(
+                Image.network(
                   currentQuestion['image'],
                   height: 120,
                   width: 120,
                   fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => const Icon(
-                    Icons.pets,
-                    size: 120,
-                    color: Colors.white,
-                  ),
+                  errorBuilder:
+                      (context, error, stackTrace) => const Icon(
+                        Icons.pets,
+                        size: 120,
+                        color: Colors.white,
+                      ),
                 ),
                 const SizedBox(height: 20),
 
@@ -274,10 +345,7 @@ class _AnimalQuizState extends State<AnimalNameView> {
                     child: Text(
                       currentQuestion['funFact'],
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.blue[900],
-                      ),
+                      style: TextStyle(fontSize: 16, color: Colors.blue[900]),
                     ),
                   ),
                 const SizedBox(height: 30),
@@ -290,11 +358,14 @@ class _AnimalQuizState extends State<AnimalNameView> {
                       context,
                       label: showFunFact ? 'Next Question' : 'Submit Answer',
                       color: Colors.blue[700]!,
-                      onPressed: showFunFact ? nextQuestion : () {
-                        if (selectedAnswer != null) {
-                          selectAnswer(selectedAnswer!);
-                        }
-                      },
+                      onPressed:
+                          showFunFact
+                              ? nextQuestion
+                              : () {
+                                if (selectedAnswer != null) {
+                                  selectAnswer(selectedAnswer!);
+                                }
+                              },
                       enabled: selectedAnswer != null || showFunFact,
                     ),
                     const SizedBox(width: 20),
@@ -324,13 +395,14 @@ class _AnimalQuizState extends State<AnimalNameView> {
     bool isCorrect = answer == correctAnswer;
 
     return GestureDetector(
-      onTap: showFunFact
-          ? null
-          : () {
-              setState(() {
-                selectedAnswer = answer;
-              });
-            },
+      onTap:
+          showFunFact
+              ? null
+              : () {
+                setState(() {
+                  selectedAnswer = answer;
+                });
+              },
       child: Container(
         height: 60,
         width: 120,
@@ -340,7 +412,9 @@ class _AnimalQuizState extends State<AnimalNameView> {
             end: Alignment.bottomRight,
             colors: [
               isSelected && isCorrect ? Colors.green[400]! : color,
-              isSelected && !isCorrect ? Colors.red[400]! : color.withOpacity(0.7),
+              isSelected && !isCorrect
+                  ? Colors.red[400]!
+                  : color.withOpacity(0.7),
             ],
           ),
           borderRadius: BorderRadius.circular(15),
@@ -351,9 +425,7 @@ class _AnimalQuizState extends State<AnimalNameView> {
               offset: Offset(2, 2),
             ),
           ],
-          border: isSelected
-              ? Border.all(color: Colors.white, width: 2)
-              : null,
+          border: isSelected ? Border.all(color: Colors.white, width: 2) : null,
         ),
         child: Center(
           child: Text(
@@ -382,17 +454,12 @@ class _AnimalQuizState extends State<AnimalNameView> {
         backgroundColor: color,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         elevation: 5,
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-        ),
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nextgen_learners/constant/import_export.dart';
 
 class VehicalsView extends StatefulWidget {
   const VehicalsView({super.key});
@@ -16,7 +17,7 @@ class _VehicalsViewState extends State<VehicalsView> {
 
   final List<Map<String, dynamic>> questions = [
     {
-      'image': 'assets/vehicles/race_car.png',
+      'image': 'https://thumbs.dreamstime.com/z/vector-cartoon-formula-race-car-isolated-white-available-eps-format-separated-groups-layers-easy-edit-148860896.jpg',
       'question': 'What vehicle is this?',
       'options': ['Car', 'Race Car', 'Truck', 'Bus'],
       'answer': 'Race Car',
@@ -24,7 +25,7 @@ class _VehicalsViewState extends State<VehicalsView> {
       'funFact': '🏎️ Race cars are super fast and compete in exciting races like Formula 1!'
     },
     {
-      'image': 'assets/vehicles/metro.png',
+      'image': 'https://png.pngtree.com/png-clipart/20230914/original/pngtree-subway-train-clipart-metro-train-on-the-city-vector-illustration-cartoon-png-image_11092381.png',
       'question': 'What vehicle is this?',
       'options': ['Bus', 'Train', 'Metro', 'Tram'],
       'answer': 'Metro',
@@ -32,31 +33,24 @@ class _VehicalsViewState extends State<VehicalsView> {
       'funFact': '🚇 Metros zip through tunnels to help people travel quickly in busy cities.'
     },
     {
-      'image': 'assets/vehicles/station_train.png',
+      'image': 'https://tse2.mm.bing.net/th/id/OIP.P_EhByY2mCk4cpK683xdLgHaGn?rs=1&pid=ImgDetMain&o=7&rm=3',
       'question': 'What vehicle is this?',
-      'options': ['Helicopter', 'Subway', 'Station Train', 'Airplane'],
+      'options': ['Helicopter', 'Subway', 'Train', 'Airplane'],
       'answer': 'Station Train',
       'hint': 'This vehicle stops at platforms and runs on long tracks.',
       'funFact': '🚉 Station trains carry passengers across cities and countries on rails.'
     },
     {
-      'image': 'assets/vehicles/cable_car.png',
+      'image': 'https://tse1.mm.bing.net/th/id/OIP.epyCYhlZBt1DWPXbtMhMuwHaHa?rs=1&pid=ImgDetMain&o=7&rm=3',
       'question': 'What vehicle is this?',
       'options': ['Bus', 'Train', 'Cable Car', 'Plane'],
       'answer': 'Cable Car',
       'hint': 'This vehicle hangs from cables and climbs hills.',
       'funFact': '🚠 Cable cars glide up mountains, giving amazing views from the air!'
     },
+    
     {
-      'image': 'assets/vehicles/monorail.png',
-      'question': 'What vehicle is this?',
-      'options': ['Monorail', 'Metro', 'Train', 'Truck'],
-      'answer': 'Monorail',
-      'hint': 'This vehicle runs on a single rail, often in theme parks.',
-      'funFact': '🚟 Monorails glide smoothly on one rail, often seen in fun places like Disney!'
-    },
-    {
-      'image': 'assets/vehicles/tram.png',
+      'image': 'https://tse1.mm.bing.net/th/id/OIP.VIA-fy87More6N8nJPysuQHaHa?rs=1&pid=ImgDetMain&o=7&rm=3',
       'question': 'What vehicle is this?',
       'options': ['Bus', 'Tram', 'Metro', 'Car'],
       'answer': 'Tram',
@@ -64,7 +58,7 @@ class _VehicalsViewState extends State<VehicalsView> {
       'funFact': '🚊 Trams roll through cities on tracks, making short trips easy and fun!'
     },
     {
-      'image': 'assets/vehicles/car.png',
+      'image': 'https://tse2.mm.bing.net/th/id/OIP.3-2H9wTMvwwO4aajuthOUQHaNL?rs=1&pid=ImgDetMain&o=7&rm=3',
       'question': 'What vehicle is this?',
       'options': ['Bus', 'Car', 'Train', 'Truck'],
       'answer': 'Car',
@@ -72,7 +66,7 @@ class _VehicalsViewState extends State<VehicalsView> {
       'funFact': '🚗 Cars usually have 4 wheels and are the most common way families travel!'
     },
     {
-      'image': 'assets/vehicles/police_car.png',
+      'image': 'https://cdn1.vectorstock.com/i/1000x1000/76/60/cartoon-police-car-character-vector-20757660.jpg',
       'question': 'What vehicle is this?',
       'options': ['Ambulance', 'Truck', 'Police Car', 'Van'],
       'answer': 'Police Car',
@@ -80,7 +74,7 @@ class _VehicalsViewState extends State<VehicalsView> {
       'funFact': '🚓 Police cars have sirens and flashing lights to move quickly and safely in emergencies.'
     },
     {
-      'image': 'assets/vehicles/ambulance.png',
+      'image': 'https://tse1.mm.bing.net/th/id/OIP.aLEL24kuuwYueba5W0fLDAHaFN?rs=1&pid=ImgDetMain&o=7&rm=3',
       'question': 'What vehicle is this?',
       'options': ['Car', 'Ambulance', 'Fire Truck', 'Van'],
       'answer': 'Ambulance',
@@ -88,7 +82,7 @@ class _VehicalsViewState extends State<VehicalsView> {
       'funFact': '🚑 Ambulances help carry sick or injured people quickly to the hospital.'
     },
     {
-      'image': 'assets/vehicles/fire_truck.png',
+      'image': 'https://tse4.mm.bing.net/th/id/OIP.gnjDXKsLPapziDRCnJQ0mgHaHG?rs=1&pid=ImgDetMain&o=7&rm=3',
       'question': 'What vehicle is this?',
       'options': ['Bus', 'Truck', 'Fire Truck', 'Car'],
       'answer': 'Fire Truck',
@@ -96,7 +90,7 @@ class _VehicalsViewState extends State<VehicalsView> {
       'funFact': '🚒 Fire trucks carry firefighters and long ladders to rescue people and stop fires!'
     },
     {
-      'image': 'assets/vehicles/school_bus.png',
+      'image': 'https://tse4.mm.bing.net/th/id/OIP.LSGymr23B1s0vl3lgVvw4gHaGl?rs=1&pid=ImgDetMain&o=7&rm=3',
       'question': 'What vehicle is this?',
       'options': ['Truck', 'School Bus', 'Car', 'Van'],
       'answer': 'School Bus',
@@ -104,7 +98,7 @@ class _VehicalsViewState extends State<VehicalsView> {
       'funFact': '🚌 School buses are usually yellow so kids can see them easily and stay safe.'
     },
     {
-      'image': 'assets/vehicles/bicycle.png',
+      'image': 'https://img.freepik.com/premium-vector/road-bike-cartoon-illustration_1366-1286.jpg?w=2000',
       'question': 'What vehicle is this?',
       'options': ['Bike', 'Scooter', 'Bicycle', 'Car'],
       'answer': 'Bicycle',
@@ -112,7 +106,7 @@ class _VehicalsViewState extends State<VehicalsView> {
       'funFact': '🚲 Bicycles are fun, healthy, and great for the planet — no fuel needed!'
     },
     {
-      'image': 'assets/vehicles/scooter.png',
+      'image': 'https://img.freepik.com/premium-vector/scooter-vector-illustration-cartoon_969863-324054.jpg',
       'question': 'What vehicle is this?',
       'options': ['Bike', 'Scooter', 'Rickshaw', 'Van'],
       'answer': 'Scooter',
@@ -120,7 +114,7 @@ class _VehicalsViewState extends State<VehicalsView> {
       'funFact': '🛵 Scooters are easy to ride and can zip through busy traffic quickly.'
     },
     {
-      'image': 'assets/vehicles/motorcycle.png',
+      'image': 'https://tse3.mm.bing.net/th/id/OIP.TPCPa11kwtoo9UlJ7zYwrwHaHE?rs=1&pid=ImgDetMain&o=7&rm=3',
       'question': 'What vehicle is this?',
       'options': ['Scooter', 'Cycle', 'Motorcycle', 'Car'],
       'answer': 'Motorcycle',
@@ -128,101 +122,101 @@ class _VehicalsViewState extends State<VehicalsView> {
       'funFact': '🏍️ Motorcycles can go really fast and are used in races and stunts too!'
     },
     {
-      'image': 'assets/vehicles/truck.png',
+      'image': 'https://as1.ftcdn.net/v2/jpg/06/11/67/46/1000_F_611674669_hsK2ECmWekvQlfPX67cLf3ZflqVrowo2.jpg',
       'question': 'What vehicle is this?',
       'options': ['Tractor', 'Bus', 'Van', 'Truck'],
       'answer': 'Truck',
       'hint': 'This vehicle carries heavy loads across cities.',
       'funFact': '🚛 Trucks carry heavy loads like fruits, machines, and toys across cities!'
     },
-    {
-      'image': 'assets/vehicles/tractor.png',
-      'question': 'What vehicle is this?',
-      'options': ['Bulldozer', 'Tractor', 'Truck', 'Train'],
-      'answer': 'Tractor',
-      'hint': 'This vehicle is used on farms to plow fields.',
-      'funFact': '🚜 Tractors are used on farms to plow fields and pull heavy tools.'
-    },
-    {
-      'image': 'assets/vehicles/train.png',
-      'question': 'What vehicle is this?',
-      'options': ['Plane', 'Ship', 'Train', 'Car'],
-      'answer': 'Train',
-      'hint': 'This vehicle runs on tracks and can be very long.',
-      'funFact': '🚂 Trains run on tracks and can be very long — some even sleep overnight in them!'
-    },
-    {
-      'image': 'assets/vehicles/airplane.png',
-      'question': 'What vehicle is this?',
-      'options': ['Helicopter', 'Rocket', 'Jet', 'Airplane'],
-      'answer': 'Airplane',
-      'hint': 'This vehicle flies high across the world.',
-      'funFact': '✈️ Airplanes fly high in the sky and can travel across the world in hours!'
-    },
-    {
-      'image': 'assets/vehicles/helicopter.png',
-      'question': 'What vehicle is this?',
-      'options': ['Helicopter', 'Plane', 'Kite', 'Jet'],
-      'answer': 'Helicopter',
-      'hint': 'This vehicle can hover and land on rooftops.',
-      'funFact': '🚁 Helicopters can go up and down straight — even land on rooftops!'
-    },
-    {
-      'image': 'assets/vehicles/ship.png',
-      'question': 'What vehicle is this?',
-      'options': ['Boat', 'Ship', 'Train', 'Truck'],
-      'answer': 'Ship',
-      'hint': 'This vehicle sails across oceans.',
-      'funFact': '🚢 Ships carry people and cargo across oceans — some even have swimming pools!'
-    },
-    {
-      'image': 'assets/vehicles/canoe.png',
-      'question': 'What vehicle is this?',
-      'options': ['Ship', 'Boat', 'Submarine', 'Car'],
-      'answer': 'Boat',
-      'hint': 'This vehicle moves with paddles on calm waters.',
-      'funFact': '🛶 Canoes and rowboats move with paddles — perfect for calm lakes and rivers.'
-    },
-    {
-      'image': 'assets/vehicles/ufo.png',
-      'question': 'What vehicle is this?',
-      'options': ['Rocket', 'Helicopter', 'UFO', 'Drone'],
-      'answer': 'UFO',
-      'hint': 'This mysterious vehicle might come from outer space!',
-      'funFact': '🛸 UFO means “Unidentified Flying Object.” No one knows what it really is — maybe aliens?'
-    },
-    {
-      'image': 'assets/vehicles/van.png',
-      'question': 'What vehicle is this?',
-      'options': ['Car', 'Truck', 'Van', 'Bus'],
-      'answer': 'Van',
-      'hint': 'This vehicle is roomy and great for carrying groups.',
-      'funFact': '🚐 Vans are roomy and often used to carry goods, families, or sports teams.'
-    },
-    {
-      'image': 'assets/vehicles/rocket.png',
-      'question': 'What vehicle is this?',
-      'options': ['Rocket', 'Airplane', 'Helicopter', 'Satellite'],
-      'answer': 'Rocket',
-      'hint': 'This vehicle blasts off to space.',
-      'funFact': '🚀 Rockets blast into space — astronauts ride them to visit the moon and space stations!'
-    },
-    {
-      'image': 'assets/vehicles/pickup_truck.png',
-      'question': 'What vehicle is this?',
-      'options': ['Truck', 'Van', 'Pickup', 'Bus'],
-      'answer': 'Pickup',
-      'hint': 'This vehicle has an open back for carrying things.',
-      'funFact': '🛻 Pickup trucks have open backs to carry tools, bikes, or even puppies!'
-    },
-    {
-      'image': 'assets/vehicles/bulldozer.png',
-      'question': 'What vehicle is this?',
-      'options': ['Tractor', 'Truck', 'Bulldozer', 'Van'],
-      'answer': 'Bulldozer',
-      'hint': 'This vehicle pushes dirt with a big blade.',
-      'funFact': '🦺 Bulldozers push dirt and rocks on construction sites using their big blades.'
-    },
+    // {
+    //   'image': 'assets/vehicles/tractor.png',
+    //   'question': 'What vehicle is this?',
+    //   'options': ['Bulldozer', 'Tractor', 'Truck', 'Train'],
+    //   'answer': 'Tractor',
+    //   'hint': 'This vehicle is used on farms to plow fields.',
+    //   'funFact': '🚜 Tractors are used on farms to plow fields and pull heavy tools.'
+    // },
+    // {
+    //   'image': 'assets/vehicles/train.png',
+    //   'question': 'What vehicle is this?',
+    //   'options': ['Plane', 'Ship', 'Train', 'Car'],
+    //   'answer': 'Train',
+    //   'hint': 'This vehicle runs on tracks and can be very long.',
+    //   'funFact': '🚂 Trains run on tracks and can be very long — some even sleep overnight in them!'
+    // },
+    // {
+    //   'image': 'assets/vehicles/airplane.png',
+    //   'question': 'What vehicle is this?',
+    //   'options': ['Helicopter', 'Rocket', 'Jet', 'Airplane'],
+    //   'answer': 'Airplane',
+    //   'hint': 'This vehicle flies high across the world.',
+    //   'funFact': '✈️ Airplanes fly high in the sky and can travel across the world in hours!'
+    // },
+    // {
+    //   'image': 'assets/vehicles/helicopter.png',
+    //   'question': 'What vehicle is this?',
+    //   'options': ['Helicopter', 'Plane', 'Kite', 'Jet'],
+    //   'answer': 'Helicopter',
+    //   'hint': 'This vehicle can hover and land on rooftops.',
+    //   'funFact': '🚁 Helicopters can go up and down straight — even land on rooftops!'
+    // },
+    // {
+    //   'image': 'assets/vehicles/ship.png',
+    //   'question': 'What vehicle is this?',
+    //   'options': ['Boat', 'Ship', 'Train', 'Truck'],
+    //   'answer': 'Ship',
+    //   'hint': 'This vehicle sails across oceans.',
+    //   'funFact': '🚢 Ships carry people and cargo across oceans — some even have swimming pools!'
+    // },
+    // {
+    //   'image': 'assets/vehicles/canoe.png',
+    //   'question': 'What vehicle is this?',
+    //   'options': ['Ship', 'Boat', 'Submarine', 'Car'],
+    //   'answer': 'Boat',
+    //   'hint': 'This vehicle moves with paddles on calm waters.',
+    //   'funFact': '🛶 Canoes and rowboats move with paddles — perfect for calm lakes and rivers.'
+    // },
+    // {
+    //   'image': 'assets/vehicles/ufo.png',
+    //   'question': 'What vehicle is this?',
+    //   'options': ['Rocket', 'Helicopter', 'UFO', 'Drone'],
+    //   'answer': 'UFO',
+    //   'hint': 'This mysterious vehicle might come from outer space!',
+    //   'funFact': '🛸 UFO means “Unidentified Flying Object.” No one knows what it really is — maybe aliens?'
+    // },
+    // {
+    //   'image': 'assets/vehicles/van.png',
+    //   'question': 'What vehicle is this?',
+    //   'options': ['Car', 'Truck', 'Van', 'Bus'],
+    //   'answer': 'Van',
+    //   'hint': 'This vehicle is roomy and great for carrying groups.',
+    //   'funFact': '🚐 Vans are roomy and often used to carry goods, families, or sports teams.'
+    // },
+    // {
+    //   'image': 'assets/vehicles/rocket.png',
+    //   'question': 'What vehicle is this?',
+    //   'options': ['Rocket', 'Airplane', 'Helicopter', 'Satellite'],
+    //   'answer': 'Rocket',
+    //   'hint': 'This vehicle blasts off to space.',
+    //   'funFact': '🚀 Rockets blast into space — astronauts ride them to visit the moon and space stations!'
+    // },
+    // {
+    //   'image': 'assets/vehicles/pickup_truck.png',
+    //   'question': 'What vehicle is this?',
+    //   'options': ['Truck', 'Van', 'Pickup', 'Bus'],
+    //   'answer': 'Pickup',
+    //   'hint': 'This vehicle has an open back for carrying things.',
+    //   'funFact': '🛻 Pickup trucks have open backs to carry tools, bikes, or even puppies!'
+    // },
+    // {
+    //   'image': 'assets/vehicles/bulldozer.png',
+    //   'question': 'What vehicle is this?',
+    //   'options': ['Tractor', 'Truck', 'Bulldozer', 'Van'],
+    //   'answer': 'Bulldozer',
+    //   'hint': 'This vehicle pushes dirt with a big blade.',
+    //   'funFact': '🦺 Bulldozers push dirt and rocks on construction sites using their big blades.'
+    // },
   ];
 
   void selectAnswer(String answer) {
@@ -259,6 +253,75 @@ class _VehicalsViewState extends State<VehicalsView> {
     final currentQuestion = questions[currentQuestionIndex];
 
     return Scaffold(
+      appBar:  AppBar(
+          leading: Tooltip(
+            message: 'Back to previous screen',
+            child: InkWell(
+              onTap: () => Get.back(),
+              borderRadius: BorderRadius.circular(16),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Colors.purple[600]!, Colors.purple[400]!],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: const [
+                    BoxShadow(
+                      blurRadius: 6,
+                      color: Colors.black26,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.white,
+                  size: 24,
+                  semanticLabel: 'Back',
+                ),
+              ),
+            ),
+          ),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                'assets/home_screen/buddy.png',
+                height: 32,
+                width: 32,
+                fit: BoxFit.contain,
+                semanticLabel: 'Math Adventure Quest Logo',
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Math Quest',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+            ],
+          ),
+          centerTitle: true,
+          backgroundColor: Colors.white.withOpacity(0.1),
+          elevation: 0,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.purple[100]!.withOpacity(0.3),
+                  Colors.pink[100]!.withOpacity(0.3),
+                ],
+              ),
+            ),
+          ),
+          toolbarHeight: 64,
+          
+        ),
+        extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -277,7 +340,7 @@ class _VehicalsViewState extends State<VehicalsView> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // App logo/icon
-                Image.asset(
+                Image.network(
                   currentQuestion['image'],
                   height: 120,
                   width: 120,

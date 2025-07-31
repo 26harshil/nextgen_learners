@@ -16,6 +16,7 @@ dependencies:
   google_fonts: ^5.0.0
   flutter_animate:
   haptic_feedback: ^0.2.0
+  audioplayers: 
 
 dev_dependencies:
   flutter_test:
@@ -28,6 +29,7 @@ flutter:
   assets:
     - assets/home_screen/
     - assets/fonts/
+    - assets/sounds/
 
   fonts:
     - family: Baloo2

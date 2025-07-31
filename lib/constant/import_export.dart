@@ -8,3 +8,5 @@ export 'package:nextgen_learners/view/animal_name/animal_name_view.dart';
 export 'package:nextgen_learners/view/animal_sound/animal_sound_view.dart';
 export 'package:nextgen_learners/view/math/math_view.dart';
 export 'package:nextgen_learners/view/vehicals/vehicals_view.dart';
+export 'package:audioplayers/audioplayers.dart';
+export 'package:google_fonts/google_fonts.dart';
