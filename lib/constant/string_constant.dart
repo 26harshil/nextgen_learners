@@ -19,11 +19,14 @@ const Color VEHICLES_COLOR_SKY_BLUE = Color(0xFF87CEEB);
 // Full opacity
 //endregion
 
-//resionStarts
+// region Screen Routes
 const String ANIMAL_Name_SCREEN = '/animal-name';
 const String ANIMAL_SOUND_SCREEN = '/animal-sound';
 const String MATH_SCREEN = '/math-screen';
 const String VEHICLE_NAME_SCREEN = '/vehicle-name';
 const String DASHBOARD_SCREEN = '/dashboard';
 const String SPLASH_SCREEN = '/splash_screen';
-//regionend
+const String FRUITS_SCREEN = '/fruits';
+const String VEGETABLES_SCREEN = '/vegetables';
+const String COLORS_Screen = '/colors';
+// endregion

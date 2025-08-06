@@ -6,6 +6,9 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Nextgen Learners</string>
+	<key>NSAppTransportSecurity</key>
+<key>NSMicrophoneUsageDescription</key>
+<string>Allow access to play audio</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

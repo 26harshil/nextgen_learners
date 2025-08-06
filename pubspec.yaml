@@ -11,13 +11,14 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   get: ^4.6.6
-  confetti: ^0.7.0
+ 
   flutter_tts: ^4.0.2
-  google_fonts: ^5.0.0
+  google_fonts: 4.0.4
   flutter_animate:
   haptic_feedback: ^0.2.0
-  audioplayers:
   flutter_native_splash:
+  audioplayers: 6.5.0
+  shared_preferences: ^2.5.3 
 
 dev_dependencies:
   flutter_test:

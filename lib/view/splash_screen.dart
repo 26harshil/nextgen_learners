@@ -1,4 +1,4 @@
- // Import your MathViews widget
+// Import your MathViews widget
 
 import 'dart:math' as math;
 
@@ -11,13 +11,14 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
   late AnimationController _scaleController;
   late AnimationController _rotationController;
   late AnimationController _bounceController;
   late Animation<double> _scaleAnimation;
-  late Animation<double> _rotationAnimation;
-  late Animation<double> _bounceAnimation;
+  // late Animation<double> _rotationAnimation;
+  // late Animation<double> _bounceAnimation;
 
   @override
   void initState() {
@@ -44,13 +45,13 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
     );
 
-    _rotationAnimation = Tween<double>(begin: 0.0, end: 2 * math.pi).animate(
-      CurvedAnimation(parent: _rotationController, curve: Curves.linear),
-    );
+    // _rotationAnimation = Tween<double>(begin: 0.0, end: 2 * math.pi).animate(
+    //   CurvedAnimation(parent: _rotationController, curve: Curves.linear),
+    // );
 
-    _bounceAnimation = Tween<double>(begin: 0.0, end: 20.0).animate(
-      CurvedAnimation(parent: _bounceController, curve: Curves.bounceInOut),
-    );
+    // _bounceAnimation = Tween<double>(begin: 0.0, end: 20.0).animate(
+    //   CurvedAnimation(parent: _bounceController, curve: Curves.bounceInOut),
+    // );
 
     // Start animations
     _scaleController.forward();
@@ -59,7 +60,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
     // Navigate to MathViews after 4 seconds
     Future.delayed(const Duration(seconds: 4), () {
-      Get.off(() => const Dashboard());
+      Get.off(() => const Dashboard(totalPoints: 0));
     });
   }
 
@@ -118,10 +119,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                     ),
                   ),
                   // Rotating stars around mascot
-                  ...List.generate(
-                    6,
-                    (index) => _buildRotatingStar(index),
-                  ),
+                  ...List.generate(6, (index) => _buildRotatingStar(index)),
                 ],
               ),
               const SizedBox(height: 30),
@@ -147,7 +145,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     return AnimatedBuilder(
       animation: _rotationController,
       builder: (context, child) {
-        final angle = (_rotationController.value * 2 * math.pi) + (index * math.pi / 3);
+        final angle =
+            (_rotationController.value * 2 * math.pi) + (index * math.pi / 3);
         return Transform.translate(
           offset: Offset(math.cos(angle) * 80, math.sin(angle) * 80),
           child: Transform.rotate(
@@ -156,14 +155,15 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
               width: 25,
               height: 25,
               decoration: BoxDecoration(
-                color: [
-                  Colors.yellow,
-                  Colors.pink,
-                  Colors.cyan,
-                  Colors.orange,
-                  Colors.purple,
-                  Colors.green,
-                ][index],
+                color:
+                    [
+                      Colors.yellow,
+                      Colors.pink,
+                      Colors.cyan,
+                      Colors.orange,
+                      Colors.purple,
+                      Colors.green,
+                    ][index],
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(

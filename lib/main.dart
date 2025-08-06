@@ -1,5 +1,5 @@
 import 'package:nextgen_learners/constant/import_export.dart';
-import 'package:nextgen_learners/view/splash_screen.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -26,9 +26,15 @@ class MyApp extends StatelessWidget {
       getPages: [
         GetPage(name: SPLASH_SCREEN, page: () => SplashScreen()),
         GetPage(name: ANIMAL_Name_SCREEN, page: () => AnimalNameView()),
-        GetPage(name: ANIMAL_SOUND_SCREEN, page: () => AnimalSoundView()),
+        GetPage(
+          name: ANIMAL_SOUND_SCREEN,
+          page: () => AnimalSoundView(questions: Animal_sound_questions),
+        ),
         GetPage(name: MATH_SCREEN, page: () => MathViews()),
         GetPage(name: VEHICLE_NAME_SCREEN, page: () => VehicalsView()),
+        GetPage(name: FRUITS_SCREEN, page: () => FruitsView()),
+        GetPage(name: COLORS_Screen, page: () => ColorsView()),
+        GetPage(name: VEGETABLES_SCREEN, page: () => VegetablesView()),
       ],
     );
   }

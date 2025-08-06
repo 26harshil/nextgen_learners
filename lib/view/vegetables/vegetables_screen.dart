@@ -1,30 +1,29 @@
 import 'package:nextgen_learners/constant/import_export.dart';
 
-class VehicalsView extends StatefulWidget {
-  const VehicalsView({super.key});
+class VegetablesView extends StatefulWidget {
+  const VegetablesView({super.key});
 
   @override
-  _VehicalsViewState createState() => _VehicalsViewState();
+  State<VegetablesView> createState() => _VegetablesScreenState();
 }
 
-class _VehicalsViewState extends State<VehicalsView> {
+class _VegetablesScreenState extends State<VegetablesView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF2196F3), Color(0xFFFFC107), Color(0xFFF44336)],
+            colors: [Color(0xFF4CAF50), Color(0xFF2196F3), Color(0xFFFF9800)],
           ),
         ),
         child: SafeArea(
           child: Center(
             child: CustomMCQWidget(
-              questions: vehical_questions,
-              quizTitle: "Vehical",
+              questions: vegetableQuestions,
+              quizTitle: "vegetable NAME",
             ),
           ),
         ),
