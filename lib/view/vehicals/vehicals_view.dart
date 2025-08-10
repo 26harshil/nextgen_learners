@@ -11,21 +11,11 @@ class _VehicalsViewState extends State<VehicalsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF2196F3), Color(0xFFFFC107), Color(0xFFF44336)],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: CustomMCQWidget(
-              questions: vehical_questions,
-              quizTitle: "Vehical",
-            ),
+      body: Expanded(
+        child: Center(
+          child: CustomMCQWidget(
+            questions: vehical_questions,
+            quizTitle: "Vehical",
           ),
         ),
       ),

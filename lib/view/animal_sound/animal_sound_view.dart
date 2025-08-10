@@ -396,6 +396,8 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
           ),
           child: Column(
             children: [
+              _buildEnhancedProgressBar(isSmallScreen, currentColor),
+              SizedBox(height: isSmallScreen ? 15 : 20),
               SizedBox(height: isSmallScreen ? 20 : 40),
               _buildEnhancedSoundButton(
                 currentQuestion,
@@ -414,7 +416,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
                 isSmallScreen,
                 currentColor,
               ),
-              SizedBox(height: isSmallScreen ? 20 : 25),
+              SizedBox(height: isSmallScreen ? 15 : 20),
               _buildAnimatedHint(
                 context,
                 currentQuestion,
@@ -436,8 +438,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
                 isSmallScreen,
               ),
               SizedBox(height: isSmallScreen ? 30 : 40),
-              _buildEnhancedProgressBar(isSmallScreen, currentColor),
-              SizedBox(height: isSmallScreen ? 25 : 30),
+
               _buildActionButtonsRow(
                 context,
                 currentQuestion,
@@ -495,14 +496,6 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
                     Icons.volume_up,
                     size: isSmallScreen ? 50 : 60,
                     color: Colors.white,
-                  ),
-                  Positioned(
-                    top: 10,
-                    right: 15,
-                    child: Text(
-                      currentQuestion['emoji'],
-                      style: TextStyle(fontSize: isSmallScreen ? 24 : 28),
-                    ),
                   ),
                 ],
               ),
@@ -641,11 +634,6 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
       ),
       child: Column(
         children: [
-          Text(
-            currentQuestion['emoji'],
-            style: TextStyle(fontSize: isSmallScreen ? 40 : 50),
-          ),
-          const SizedBox(height: 12),
           Text(
             currentQuestion['question'],
             style: Theme.of(context).textTheme.bodyLarge,
@@ -971,14 +959,6 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
           icon: showHint ? Icons.visibility_off : Icons.lightbulb,
           color: Colors.amber[600]!,
           onPressed: toggleHint,
-          isSmallScreen: isSmallScreen,
-        ),
-        _buildEnhancedActionButton(
-          context,
-          label: 'Play Sound 🔊',
-          icon: Icons.volume_up,
-          color: currentColor,
-          onPressed: () => playSound(currentQuestion['sound']),
           isSmallScreen: isSmallScreen,
         ),
       ],

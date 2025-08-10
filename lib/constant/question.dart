@@ -376,16 +376,16 @@ final List<Map<String, dynamic>> questions = [
 ];
 
 final List<Map<String, dynamic>> animalquestions = [
-  {
-    'image':
-        'https://tse1.mm.bing.net/th/id/OIP.PtoTy3zxmq89LA_fx2_rbAHaHq?rs=1&pid=ImgDetMain&o=7&rm=3',
-    'question': 'Which animal is known as the King of the Jungle?',
-    'options': ['Elephant', 'Tiger', 'Lion', 'Bear'],
-    'answer': 'Lion',
-    'hint': 'This animal is a big cat with a majestic mane.',
-    'funFact':
-        '🦁 Lions are called the King of the Jungle because of their strength, leadership, and majestic appearance. They live in groups called prides.',
-  },
+    {
+      'image':
+          'https://tse1.mm.bing.net/th/id/OIP.PtoTy3zxmq89LA_fx2_rbAHaHq?rs=1&pid=ImgDetMain&o=7&rm=3',
+      'question': 'Which animal is known as the King of the Jungle?',
+      'options': ['Elephant', 'Tiger', 'Lion', 'Bear'],
+      'answer': 'Lion',
+      'hint': 'This animal is a big cat with a majestic mane.',
+      'funFact':
+          '🦁 Lions are called the King of the Jungle because of their strength, leadership, and majestic appearance. They live in groups called prides.',
+    },
   {
     'image':
         'https://tse3.mm.bing.net/th/id/OIP.TGg5wMD-jRwcZyz1IxXH6gHaIN?w=1154&h=1280&rs=1&pid=ImgDetMain&o=7&rm=3',

@@ -197,7 +197,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                               Text(
                                 '🎉 Welcome to Learning Adventure! 🚀',
                                 style: GoogleFonts.fredoka(
-                                  fontSize: 22,
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.indigo[700],
                                 ),
@@ -242,7 +242,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                     Text(
                                       'Total Points: $cumulativePoints',
                                       style: GoogleFonts.fredoka(
-                                        fontSize: 16,
+                                        fontSize: 25,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.indigo[700],
                                       ),
@@ -331,19 +331,19 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         ),
 
                         // Fun Footer
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _buildBouncingEmoji('🎯', 0),
-                              _buildBouncingEmoji('🌈', 200),
-                              _buildBouncingEmoji('⭐', 400),
-                              _buildBouncingEmoji('🎨', 600),
-                              _buildBouncingEmoji('🎪', 800),
-                            ],
-                          ),
-                        ),
+                        // Container(
+                        //   padding: const EdgeInsets.symmetric(vertical: 15),
+                        //   child: Row(
+                        //     mainAxisAlignment: MainAxisAlignment.center,
+                        //     children: [
+                        //       _buildBouncingEmoji('🎯', 0),
+                        //       _buildBouncingEmoji('🌈', 200),
+                        //       _buildBouncingEmoji('⭐', 400),
+                        //       _buildBouncingEmoji('🎨', 600),
+                        //       _buildBouncingEmoji('🎪', 800),
+                        //     ],
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),
@@ -356,20 +356,4 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildBouncingEmoji(String emoji, int delay) {
-    return TweenAnimationBuilder<double>(
-      duration: Duration(milliseconds: 1500 + delay),
-      tween: Tween(begin: 0.0, end: 1.0),
-      curve: Curves.bounceOut,
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(0, (1 - value) * -30),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(emoji, style: const TextStyle(fontSize: 28)),
-          ),
-        );
-      },
-    );
-  }
 }

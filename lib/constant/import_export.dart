@@ -18,3 +18,4 @@ export 'dart:math';
 export 'package:nextgen_learners/view/color/colors_screen.dart';
 export 'package:nextgen_learners/view/fruits/fruits_screen.dart';
 export 'package:nextgen_learners/view/vegetables/vegetables_screen.dart';
+export 'dart:math';

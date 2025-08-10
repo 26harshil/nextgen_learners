@@ -1,6 +1,5 @@
 import 'package:nextgen_learners/constant/import_export.dart';
 
-
 void main() {
   runApp(const MyApp());
 }
@@ -30,6 +29,7 @@ class MyApp extends StatelessWidget {
           name: ANIMAL_SOUND_SCREEN,
           page: () => AnimalSoundView(questions: Animal_sound_questions),
         ),
+        GetPage(name: DASHBOARD_SCREEN, page: () => Dashboard(totalPoints: 0)),
         GetPage(name: MATH_SCREEN, page: () => MathViews()),
         GetPage(name: VEHICLE_NAME_SCREEN, page: () => VehicalsView()),
         GetPage(name: FRUITS_SCREEN, page: () => FruitsView()),

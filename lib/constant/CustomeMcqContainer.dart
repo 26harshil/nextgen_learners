@@ -183,15 +183,12 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
                     children: [
-                      const SizedBox(height: 20),
-                      _buildAnimatedMascot(),
-                      const SizedBox(height: 20),
                       _buildProgressIndicator(),
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 10),
                       _buildPointsDisplay(),
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 14),
                       _buildQuestionCard(),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 10),
                       if (showHint) _buildHintCard(),
                       const SizedBox(height: 30),
                       _buildAnswerOptions(),
@@ -277,7 +274,6 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                 fontWeight: FontWeight.w800,
                 color: Colors.white,
                 letterSpacing: 1.2,
-                
               ),
             ),
           ),
@@ -441,7 +437,6 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
       ),
       child: Column(
         children: [
-          Icon(Icons.psychology, color: Colors.purple[400], size: 32),
           const SizedBox(height: 12),
           if (imagePath != null && imagePath.isNotEmpty)
             Padding(
@@ -450,7 +445,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                   imagePath.startsWith('http')
                       ? Image.network(
                         imagePath,
-                        height: 100,
+                        height: 80,
                         fit: BoxFit.contain,
                         errorBuilder:
                             (context, error, stackTrace) =>
@@ -468,7 +463,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
           Text(
             questionData['question'],
             style: GoogleFonts.poppins(
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: FontWeight.w700,
               color: Colors.purple[800],
             ),
@@ -525,7 +520,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
         crossAxisCount: 2,
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
-        childAspectRatio: 1.2,
+        childAspectRatio: 1.5,
       ),
       itemCount: widget.questions[currentQuestionIndex]['options'].length,
       itemBuilder: (context, index) {
