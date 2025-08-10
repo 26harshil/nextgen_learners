@@ -32,6 +32,7 @@ flutter:
     - assets/home_screen/
     - assets/fonts/
     - assets/sounds/
+    - assets/badges/
 
   fonts:
     - family: Baloo2
