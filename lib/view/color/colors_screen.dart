@@ -15,6 +15,7 @@ class _ColorsScreenState extends State<ColorsView> {
         child: CustomMCQWidget(
           questions: colorQuestions,
           quizTitle: "Colors QUIZ",
+          quizId: 'colors',
         ),
       ),
     );

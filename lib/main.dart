@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: ANIMAL_Name_SCREEN, page: () => AnimalNameView()),
         GetPage(
           name: ANIMAL_SOUND_SCREEN,
-          page: () => AnimalSoundView(questions: Animal_sound_questions),
+          page: () => AnimalSoundView(questions: Animal_sound_questions, quizId: 'animal_sound'),
         ),
         GetPage(name: DASHBOARD_SCREEN, page: () => Dashboard(totalPoints: 0)),
         GetPage(name: MATH_SCREEN, page: () => MathViews()),

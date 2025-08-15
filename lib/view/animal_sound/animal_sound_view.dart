@@ -2,7 +2,8 @@ import 'package:nextgen_learners/constant/import_export.dart';
 
 class AnimalSoundView extends StatefulWidget {
   final List<Map<String, dynamic>> questions;
-  const AnimalSoundView({super.key, required this.questions});
+  final String quizId;
+  const AnimalSoundView({super.key, required this.questions, required this.quizId});
 
   @override
   _AnimalSoundViewState createState() => _AnimalSoundViewState();
@@ -32,6 +33,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
   void initState() {
     super.initState();
     _initializeAnimations();
+    _loadProgress();
   }
 
   void _initializeAnimations() {
@@ -83,6 +85,36 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     _pulseController.repeat(reverse: true);
   }
 
+  Future<void> _loadProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedIndex = prefs.getInt('progress_${widget.quizId}') ?? 0;
+    final savedPoints = prefs.getInt('points_${widget.quizId}') ?? 0;
+    if (!mounted) return;
+    setState(() {
+      currentQuestionIndex =
+          savedIndex.clamp(0, widget.questions.length - 1);
+      points = savedPoints;
+    });
+  }
+
+  Future<void> _saveProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('progress_${widget.quizId}', currentQuestionIndex);
+    await prefs.setInt('points_${widget.quizId}', points);
+  }
+
+  Future<void> _markCompleted() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('completed_${widget.quizId}', true);
+    await prefs.remove('progress_${widget.quizId}');
+    await prefs.remove('points_${widget.quizId}');
+    final badges = prefs.getStringList('badges') ?? [];
+    if (!badges.contains(widget.quizId)) {
+      badges.add(widget.quizId);
+      await prefs.setStringList('badges', badges);
+    }
+  }
+
   @override
   void dispose() {
     _bounceController.dispose();
@@ -113,6 +145,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
       showFunFact = true;
       if (answer == widget.questions[currentQuestionIndex]['answer']) {
         points += 10;
+        _saveProgress();
         _confettiController.forward().then((_) => _confettiController.reset());
       }
       // Show quiz completion dialog only after the last question
@@ -122,20 +155,22 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     });
   }
 
-  void _nextQuestion() {
-    setState(() {
-      if (currentQuestionIndex < widget.questions.length - 1) {
+  void _nextQuestion() async {
+    if (currentQuestionIndex < widget.questions.length - 1) {
+      setState(() {
         currentQuestionIndex++;
         selectedAnswer = null;
         showFunFact = false;
         showHint = false;
         _slideController.reset();
         _slideController.forward();
-      } else {
-        // Quiz complete, navigate to DashboardScreen
-        Get.off(() => Dashboard(totalPoints: points));
-      }
-    });
+      });
+      _saveProgress();
+    } else {
+      await _markCompleted();
+      // Quiz complete, navigate to DashboardScreen
+      Get.off(() => Dashboard(totalPoints: points));
+    }
   }
 
   void _showQuizComplete() {

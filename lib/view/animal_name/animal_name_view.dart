@@ -17,6 +17,7 @@ class _AnimalQuizState extends State<AnimalNameView> {
         child: CustomMCQWidget(
           questions: animalquestions,
           quizTitle: "ANIMAL NAME QUIZ",
+          quizId: 'animal_name',
         ),
       ),
     );

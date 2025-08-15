@@ -75,6 +75,102 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     });
   }
 
+  Future<bool> _isCompleted(String id) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('completed_$id') ?? false;
+  }
+
+  Future<List<String>> _loadBadges() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList('badges') ?? [];
+  }
+
+  Widget _tileWithTick({required String quizId, required CustomContainer tile}) {
+    return FutureBuilder<bool>(
+      future: _isCompleted(quizId),
+      builder: (context, snapshot) {
+        final completed = snapshot.data ?? false;
+        return Stack(
+          children: [
+            tile,
+            if (completed)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.green[600],
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.green.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.check, color: Colors.white, size: 18),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildAchievementsRow() {
+    return FutureBuilder<List<String>>(
+      future: _loadBadges(),
+      builder: (context, snapshot) {
+        final badges = snapshot.data ?? [];
+        if (badges.isEmpty) return const SizedBox.shrink();
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(bottom: 20),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.6),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: badges.map((id) {
+                final path = 'assets/badges/$id.png';
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                  child: Tooltip(
+                    message: 'Completed: $id',
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        path,
+                        height: 48,
+                        width: 48,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stack) => Container(
+                          height: 48,
+                          width: 48,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.green[200],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.emoji_events, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _fadeController.dispose();
@@ -254,6 +350,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                           ),
                         ),
 
+                        // Achievements Row
+                        _buildAchievementsRow(),
+
                         // Learning Categories Grid
                         Expanded(
                           child: GridView.count(
@@ -262,69 +361,90 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                             mainAxisSpacing: 20,
                             childAspectRatio: 0.9,
                             children: [
-                              CustomContainer(
-                                newPage: ANIMAL_Name_SCREEN,
-                                title: "Animals",
-                                subtitle: "Meet cute animals!",
-                                img: 'assets/home_screen/lion.jpg',
-                                primaryColor: ANIMAL_SCREEN_COLOR_LIGHT_PINK,
-                                secondaryColor:
-                                    ANIMAL_SCREEN_COLOR_LIGHT_LAVENDER,
-                                delay: 200,
+                              _tileWithTick(
+                                quizId: 'animal_name',
+                                tile: CustomContainer(
+                                  newPage: ANIMAL_Name_SCREEN,
+                                  title: "Animals",
+                                  subtitle: "Meet cute animals!",
+                                  img: 'assets/home_screen/lion.jpg',
+                                  primaryColor: ANIMAL_SCREEN_COLOR_LIGHT_PINK,
+                                  secondaryColor:
+                                      ANIMAL_SCREEN_COLOR_LIGHT_LAVENDER,
+                                  delay: 200,
+                                ),
                               ),
-                              CustomContainer(
-                                newPage: ANIMAL_SOUND_SCREEN,
-                                title: "Animal Sounds",
-                                subtitle: "Hear them roar!",
-                                img: 'assets/home_screen/sound.webp',
-                                primaryColor: ANIMALSOUND_COLOR_LIGHT_ORANGE,
-                                secondaryColor: ANIMALSOUND_COLOR_LIGHT_CYAN,
-                                delay: 400,
+                              _tileWithTick(
+                                quizId: 'animal_sound',
+                                tile: CustomContainer(
+                                  newPage: ANIMAL_SOUND_SCREEN,
+                                  title: "Animal Sounds",
+                                  subtitle: "Hear them roar!",
+                                  img: 'assets/home_screen/sound.webp',
+                                  primaryColor: ANIMALSOUND_COLOR_LIGHT_ORANGE,
+                                  secondaryColor: ANIMALSOUND_COLOR_LIGHT_CYAN,
+                                  delay: 400,
+                                ),
                               ),
-                              CustomContainer(
-                                newPage: MATH_SCREEN,
-                                title: "Math Fun",
-                                subtitle: "Numbers & counting!",
-                                img: 'assets/home_screen/math.webp',
-                                primaryColor: MATH_COLOR_LIGHT_PEACH,
-                                secondaryColor: MATH_COLOR_SOFT_PINK,
-                                delay: 600,
+                              _tileWithTick(
+                                quizId: 'math',
+                                tile: CustomContainer(
+                                  newPage: MATH_SCREEN,
+                                  title: "Math Fun",
+                                  subtitle: "Numbers & counting!",
+                                  img: 'assets/home_screen/math.webp',
+                                  primaryColor: MATH_COLOR_LIGHT_PEACH,
+                                  secondaryColor: MATH_COLOR_SOFT_PINK,
+                                  delay: 600,
+                                ),
                               ),
-                              CustomContainer(
-                                newPage: VEHICLE_NAME_SCREEN,
-                                title: "Vehicles",
-                                subtitle: "Cars, trains & more!",
-                                img: 'assets/home_screen/vehicals.jpg',
-                                primaryColor: VEHICLES_COLOR_LIGHT_BLUE,
-                                secondaryColor: VEHICLES_COLOR_SKY_BLUE,
-                                delay: 800,
+                              _tileWithTick(
+                                quizId: 'vehicals',
+                                tile: CustomContainer(
+                                  newPage: VEHICLE_NAME_SCREEN,
+                                  title: "Vehicles",
+                                  subtitle: "Cars, trains & more!",
+                                  img: 'assets/home_screen/vehicals.jpg',
+                                  primaryColor: VEHICLES_COLOR_LIGHT_BLUE,
+                                  secondaryColor: VEHICLES_COLOR_SKY_BLUE,
+                                  delay: 800,
+                                ),
                               ),
-                              CustomContainer(
-                                newPage: FRUITS_SCREEN,
-                                title: "Fruits",
-                                subtitle: "Learn about tasty fruits!",
-                                img: 'assets/home_screen/fruits.jpg',
-                                primaryColor: Colors.red[100]!,
-                                secondaryColor: Colors.orange[100]!,
-                                delay: 1000,
+                              _tileWithTick(
+                                quizId: 'fruits',
+                                tile: CustomContainer(
+                                  newPage: FRUITS_SCREEN,
+                                  title: "Fruits",
+                                  subtitle: "Learn about tasty fruits!",
+                                  img: 'assets/home_screen/fruits.jpg',
+                                  primaryColor: Colors.red[100]!,
+                                  secondaryColor: Colors.orange[100]!,
+                                  delay: 1000,
+                                ),
                               ),
-                              CustomContainer(
-                                newPage: VEGETABLES_SCREEN,
-                                title: "Vegetables",
-                                subtitle: "Discover healthy veggies!",
-                                img: 'assets/home_screen/vegetables.avif',
-                                primaryColor: Colors.green[100]!,
-                                secondaryColor: Colors.lime[100]!,
-                                delay: 1200,
+                              _tileWithTick(
+                                quizId: 'vegetables',
+                                tile: CustomContainer(
+                                  newPage: VEGETABLES_SCREEN,
+                                  title: "Vegetables",
+                                  subtitle: "Discover healthy veggies!",
+                                  img: 'assets/home_screen/vegetables.avif',
+                                  primaryColor: Colors.green[100]!,
+                                  secondaryColor: Colors.lime[100]!,
+                                  delay: 1200,
+                                ),
                               ),
-                              CustomContainer(
-                                newPage: COLORS_Screen,
-                                title: "Colors",
-                                subtitle: "Explore vibrant colors!",
-                                img: 'assets/home_screen/colors.webp',
-                                primaryColor: Colors.blue[100]!,
-                                secondaryColor: Colors.purple[100]!,
-                                delay: 1400,
+                              _tileWithTick(
+                                quizId: 'colors',
+                                tile: CustomContainer(
+                                  newPage: COLORS_Screen,
+                                  title: "Colors",
+                                  subtitle: "Explore vibrant colors!",
+                                  img: 'assets/home_screen/colors.webp',
+                                  primaryColor: Colors.blue[100]!,
+                                  secondaryColor: Colors.purple[100]!,
+                                  delay: 1400,
+                                ),
                               ),
                             ],
                           ),
@@ -355,5 +475,4 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       ),
     );
   }
-
 }

@@ -16,6 +16,7 @@ class _VehicalsViewState extends State<VehicalsView> {
           child: CustomMCQWidget(
             questions: vehical_questions,
             quizTitle: "Vehical",
+            quizId: 'vehicals',
           ),
         ),
       ),

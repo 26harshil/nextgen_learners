@@ -15,6 +15,7 @@ class _VegetablesScreenState extends State<VegetablesView> {
         child: CustomMCQWidget(
           questions: vegetableQuestions,
           quizTitle: "vegetable NAME",
+          quizId: 'vegetables',
         ),
       ),
     );

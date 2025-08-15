@@ -16,6 +16,7 @@ class _MathViewsState extends State<MathViews> with TickerProviderStateMixin {
       body: CustomMCQWidget(
         questions: math_questions,
         quizTitle: "Math Question",
+        quizId: 'math',
       ),
     );
   }
