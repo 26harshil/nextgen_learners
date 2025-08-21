@@ -1,0 +1,75 @@
+import 'dart:convert';
+import 'dart:math';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+
+class QuizService {
+  /// Fetch quiz JSON from [apiUrl], log the raw response (debug only),
+  /// sanitize values (convert numbers/null -> String) and normalize options.
+  static Future<List<Map<String, dynamic>>> fetchQuiz(String apiUrl) async {
+    try {
+      if (kDebugMode) debugPrint('Fetching quiz from: $apiUrl');
+      final resp = await http.get(Uri.parse(apiUrl));
+      if (kDebugMode) {
+        final preview = resp.body.length > 1000 ? resp.body.substring(0, 1000) + '... (truncated)' : resp.body;
+        debugPrint('HTTP ${resp.statusCode} -> ${preview}');
+      }
+
+      if (resp.statusCode != 200) {
+        throw Exception('HTTP ${resp.statusCode}: ${resp.body}');
+      }
+
+      final decoded = json.decode(resp.body);
+
+      List<dynamic> rawList;
+      if (decoded is List) {
+        rawList = decoded;
+      } else if (decoded is Map && decoded['data'] is List) {
+        rawList = decoded['data'] as List;
+      } else {
+        throw Exception('Unexpected JSON format: expecting List or {"data": List}');
+      }
+
+      // Sanitize each question and options
+      final sanitized = rawList.map<Map<String, dynamic>>((rawItem) {
+        final Map<String, dynamic> item = (rawItem is Map) ? Map<String, dynamic>.from(rawItem) : <String, dynamic>{};
+
+        final String questionText = (item['questionText'] ?? item['question'] ?? '').toString();
+        final String imageUrl = (item['imageUrl'] ?? item['image'] ?? '').toString();
+        final String soundUrl = (item['soundUrl'] ?? item['sound'] ?? '').toString();
+        final String hint = (item['hint'] ?? '').toString();
+        final String funFact = (item['funFact'] ?? item['info'] ?? '').toString();
+        final dynamic qId = item.containsKey('questionId') ? item['questionId'] : null;
+
+        final List<dynamic> rawOptions = (item['options'] is List) ? item['options'] as List : <dynamic>[];
+        final options = rawOptions.map<Map<String, dynamic>>((optRaw) {
+          final Map<String, dynamic> opt = (optRaw is Map) ? Map<String, dynamic>.from(optRaw) : <String, dynamic>{};
+          return <String, dynamic>{
+            'optionId': opt['optionId'] ?? opt['id'] ?? null,
+            'optionText': (opt['optionText'] ?? opt['text'] ?? opt['value'] ?? '').toString(),
+            'isCorrect': (opt['isCorrect'] == true) || (opt['correct'] == true) || (opt['answer'] == true),
+          };
+        }).toList();
+
+        final map = <String, dynamic>{
+          'questionText': questionText,
+          'imageUrl': imageUrl,
+          'soundUrl': soundUrl,
+          'hint': hint,
+          'funFact': funFact,
+          'options': options,
+        };
+        if (qId != null) map['questionId'] = qId;
+        return map;
+      }).toList();
+
+      if (kDebugMode) debugPrint('Sanitized items: ${sanitized.length}');
+      return sanitized;
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('QuizService.fetchQuiz error: $e\n$st');
+      }
+      rethrow;
+    }
+  }
+}

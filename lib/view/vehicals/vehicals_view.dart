@@ -11,14 +11,20 @@ class _VehicalsViewState extends State<VehicalsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Expanded(
-        child: Center(
-          child: CustomMCQWidget(
-            questions: vehical_questions,
-            quizTitle: "Vehical",
-            quizId: 'vehicals',
-          ),
-        ),
+      body: SafeArea(
+        child: Obx(() {
+          final list = vehicleName;
+          if (list.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return Center(
+            child: CustomMCQWidget(
+              questions: list.toList(),
+              quizTitle: "Vehical",
+              quizId: 'vehicals',
+            ),
+          );
+        }),
       ),
     );
   }

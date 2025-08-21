@@ -91,8 +91,8 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     final savedPoints = prefs.getInt('points_${widget.quizId}') ?? 0;
     if (!mounted) return;
     setState(() {
-      currentQuestionIndex =
-          savedIndex.clamp(0, widget.questions.length - 1);
+      final maxIndex = widget.questions.isEmpty ? 0 : (widget.questions.length - 1);
+      currentQuestionIndex = savedIndex.clamp(0, maxIndex);
       points = savedPoints;
     });
   }
@@ -143,7 +143,8 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     setState(() {
       selectedAnswer = answer;
       showFunFact = true;
-      if (answer == widget.questions[currentQuestionIndex]['answer']) {
+      final correct = (widget.questions[currentQuestionIndex]['answer'] as String?) ?? '';
+      if (answer == correct) {
         points += 10;
         _saveProgress();
         _confettiController.forward().then((_) => _confettiController.reset());
@@ -219,10 +220,16 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
 
   @override
   Widget build(BuildContext context) {
+    if (widget.questions.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Sound Quiz')),
+        body: const Center(child: Text('No questions available')),
+      );
+    }
     final currentQuestion = widget.questions[currentQuestionIndex];
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 600;
-    final currentColor = currentQuestion['color'] as Color;
+    final currentColor = (currentQuestion['color'] as Color?) ?? Colors.blue;
 
     return Theme(
       data: _buildTheme(currentColor, isSmallScreen),
@@ -242,7 +249,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
                   isSmallScreen,
                   currentColor,
                 ),
-                if (showFunFact && selectedAnswer == currentQuestion['answer'])
+                if (showFunFact && selectedAnswer == (currentQuestion['answer'] as String? ?? ''))
                   _buildConfettiOverlay(),
               ],
             ),
@@ -326,7 +333,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
                 ),
               ),
               Text(
-                'Question ${currentQuestionIndex + 1}/${widget.questions.length}',
+                '${(widget.questions.isEmpty ? 0 : currentQuestionIndex + 1)}/${widget.questions.isEmpty ? 0 : widget.questions.length}',
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   fontWeight: FontWeight.w400,
@@ -493,7 +500,19 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     Color currentColor,
   ) {
     return GestureDetector(
-      onTap: () => playSound(currentQuestion['sound']),
+      onTap: () {
+        final sp = currentQuestion['sound'] as String?;
+        if (sp == null || sp.isEmpty) {
+          _showEnhancedAlert(
+            title: 'No sound',
+            message: 'Sound unavailable for this question.',
+            icon: Icons.volume_off,
+            color: Colors.red,
+          );
+        } else {
+          playSound(sp);
+        }
+      },
       child: AnimatedBuilder(
         animation: _bounceAnimation,
         builder: (context, child) {
@@ -670,7 +689,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
       child: Column(
         children: [
           Text(
-            currentQuestion['question'],
+            (currentQuestion['question'] as String? ?? 'Which animal makes this sound?'),
             style: Theme.of(context).textTheme.bodyLarge,
             textAlign: TextAlign.center,
           ),
@@ -718,7 +737,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          currentQuestion['hint'],
+                          (currentQuestion['hint'] as String? ?? 'Listen carefully for clues.'),
                           style: Theme.of(
                             context,
                           ).textTheme.bodyMedium?.copyWith(
@@ -750,13 +769,14 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
         mainAxisSpacing: isSmallScreen ? 16 : 20,
         childAspectRatio: isSmallScreen ? 1.8 : 2.2,
       ),
-      itemCount: currentQuestion['options'].length,
+      itemCount: ((currentQuestion['options'] as List?) ?? const []).length,
       itemBuilder: (context, index) {
-        final answer = currentQuestion['options'][index];
+        final opts = (currentQuestion['options'] as List?) ?? const [];
+        final answer = opts[index].toString();
         return _buildEnhancedAnswerButton(
           context,
           answer,
-          currentQuestion['answer'],
+          (currentQuestion['answer'] as String?) ?? '',
           isSmallScreen,
           currentColor,
           index,
@@ -887,7 +907,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          currentQuestion['funFact'],
+                          (currentQuestion['funFact'] as String? ?? ''),
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(color: Colors.blue[900], height: 1.4),
                         ),
@@ -917,7 +937,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
                 ),
               ),
               Text(
-                '${currentQuestionIndex + 1}/${widget.questions.length}',
+                '${(widget.questions.isEmpty ? 0 : currentQuestionIndex + 1)}/${widget.questions.isEmpty ? 0 : widget.questions.length}',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -936,7 +956,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
             child: ClipRRect(
               borderRadius: BorderRadius.circular(6),
               child: LinearProgressIndicator(
-                value: (currentQuestionIndex + 1) / widget.questions.length,
+                value: widget.questions.isEmpty ? 0 : (currentQuestionIndex + 1) / widget.questions.length,
                 backgroundColor: Colors.transparent,
                 valueColor: AlwaysStoppedAnimation<Color>(currentColor),
                 minHeight: 12,

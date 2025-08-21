@@ -20,13 +20,14 @@ const Color VEHICLES_COLOR_SKY_BLUE = Color(0xFF87CEEB);
 //endregion
 
 // region Screen Routes
-const String ANIMAL_Name_SCREEN = '/animal-name';
-const String ANIMAL_SOUND_SCREEN = '/animal-sound';
-const String MATH_SCREEN = '/math-screen';
-const String VEHICLE_NAME_SCREEN = '/vehicle-name';
+const String COLORS_Screen = '/colors';
+const String FRUITS_SCREEN = '/fruits';
+const String MATH_SCREEN = '/math';
+const String VEGETABLES_SCREEN = '/vegetables';
+const String VEHICLE_NAME_SCREEN = '/vehicals';
+const String ANIMAL_Name_SCREEN = '/animalname';
+const String ANIMAL_SOUND_SCREEN = '/animalsound';
 const String DASHBOARD_SCREEN = '/dashboard';
 const String SPLASH_SCREEN = '/splash_screen';
-const String FRUITS_SCREEN = '/fruits';
-const String VEGETABLES_SCREEN = '/vegetables';
-const String COLORS_Screen = '/colors';
+
 // endregion

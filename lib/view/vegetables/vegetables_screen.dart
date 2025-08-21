@@ -13,7 +13,7 @@ class _VegetablesScreenState extends State<VegetablesView> {
     return Scaffold(
       body: Center(
         child: CustomMCQWidget(
-          questions: vegetableQuestions,
+          questions: vegetables,
           quizTitle: "vegetable NAME",
           quizId: 'vegetables',
         ),

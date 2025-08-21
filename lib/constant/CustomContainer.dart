@@ -1,4 +1,6 @@
-import 'package:nextgen_learners/constant/import_export.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CustomContainer extends StatelessWidget {
   final String title;
@@ -22,6 +24,8 @@ class CustomContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Navigation is handled via named routes; data is fetched inside screens.
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return TweenAnimationBuilder<double>(
@@ -64,10 +68,12 @@ class CustomContainer extends StatelessWidget {
   }
 
   Widget _buildMainContent(
-      BuildContext context, double animationValue, BoxConstraints constraints) {
-    // Calculate responsive image size based on container width
-    final imageSize = constraints.maxWidth * 0.3; // 30% of container width
-    final maxImageSize = 100.0; // Maximum image size
+    BuildContext context,
+    double animationValue,
+    BoxConstraints constraints,
+  ) {
+    final imageSize = constraints.maxWidth * 0.3;
+    final maxImageSize = 100.0;
     final finalImageSize = imageSize > maxImageSize ? maxImageSize : imageSize;
 
     return Padding(
@@ -76,7 +82,6 @@ class CustomContainer extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Larger Image with Animation
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0.8, end: 1.0),
             duration: Duration(milliseconds: 800 + delay),
@@ -103,11 +108,12 @@ class CustomContainer extends StatelessWidget {
                     child: Image.asset(
                       img,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.error,
-                        size: 40,
-                        color: Colors.red,
-                      ),
+                      errorBuilder:
+                          (context, error, stackTrace) => const Icon(
+                            Icons.error,
+                            size: 40,
+                            color: Colors.red,
+                          ),
                     ),
                   ),
                 ),
@@ -115,7 +121,6 @@ class CustomContainer extends StatelessWidget {
             },
           ),
           const SizedBox(height: 16),
-          // Title
           Text(
             title,
             style: GoogleFonts.fredoka(
@@ -128,7 +133,6 @@ class CustomContainer extends StatelessWidget {
             maxLines: 1,
           ),
           const SizedBox(height: 4),
-          // Subtitle
           Text(
             subtitle,
             style: GoogleFonts.fredoka(

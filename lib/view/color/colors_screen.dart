@@ -13,7 +13,7 @@ class _ColorsScreenState extends State<ColorsView> {
     return Scaffold(
       body: Center(
         child: CustomMCQWidget(
-          questions: colorQuestions,
+          questions: colors,
           quizTitle: "Colors QUIZ",
           quizId: 'colors',
         ),

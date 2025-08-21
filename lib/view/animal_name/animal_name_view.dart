@@ -15,7 +15,7 @@ class _AnimalQuizState extends State<AnimalNameView> {
     return Scaffold(
       body: Center(
         child: CustomMCQWidget(
-          questions: animalquestions,
+          questions: animalName,
           quizTitle: "ANIMAL NAME QUIZ",
           quizId: 'animal_name',
         ),

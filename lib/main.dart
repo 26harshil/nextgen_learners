@@ -1,4 +1,6 @@
 import 'package:nextgen_learners/constant/import_export.dart';
+import 'package:nextgen_learners/controller/dashboard_controller.dart';
+import 'package:nextgen_learners/view/quizz_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -22,19 +24,47 @@ class MyApp extends StatelessWidget {
       ),
 
       initialRoute: SPLASH_SCREEN,
-      getPages: [
-        GetPage(name: SPLASH_SCREEN, page: () => SplashScreen()),
-        GetPage(name: ANIMAL_Name_SCREEN, page: () => AnimalNameView()),
+     getPages: [
+        // Ensure splash route exists so initialRoute is resolvable
         GetPage(
-          name: ANIMAL_SOUND_SCREEN,
-          page: () => AnimalSoundView(questions: Animal_sound_questions, quizId: 'animal_sound'),
+          name: SPLASH_SCREEN,
+          page: () => const SplashScreen(),
         ),
-        GetPage(name: DASHBOARD_SCREEN, page: () => Dashboard(totalPoints: 0)),
-        GetPage(name: MATH_SCREEN, page: () => MathViews()),
-        GetPage(name: VEHICLE_NAME_SCREEN, page: () => VehicalsView()),
-        GetPage(name: FRUITS_SCREEN, page: () => FruitsView()),
-        GetPage(name: COLORS_Screen, page: () => ColorsView()),
-        GetPage(name: VEGETABLES_SCREEN, page: () => VegetablesView()),
+         GetPage(
+           name: DASHBOARD_SCREEN,
+           page: () => const Dashboard(totalPoints: 0),
+           binding: BindingsBuilder(() {
+             Get.put(DashboardController());
+           }),
+         ),
+         GetPage(
+           name: COLORS_Screen,
+           page: () => const QuizScreen(quizId: 'colors'),
+         ),
+         GetPage(
+           name: FRUITS_SCREEN,
+           page: () => const QuizScreen(quizId: 'fruits'),
+         ),
+         GetPage(
+           name: VEGETABLES_SCREEN,
+           page: () => const QuizScreen(quizId: 'vegetables'),
+         ),
+         GetPage(
+           name: VEHICLE_NAME_SCREEN,
+           page: () => const QuizScreen(quizId: 'vehicals'),
+         ),
+         GetPage(
+           name: MATH_SCREEN,
+           page: () => const QuizScreen(quizId: 'math'),
+         ),
+         GetPage(
+           name: ANIMAL_Name_SCREEN,
+           page: () => const QuizScreen(quizId: 'animalname'),
+         ),
+         GetPage(
+           name: ANIMAL_SOUND_SCREEN,
+           page: () => const QuizScreen(quizId: 'animalsound'),
+         ),
       ],
     );
   }

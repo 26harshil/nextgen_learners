@@ -4,12 +4,14 @@ class CustomMCQWidget extends StatefulWidget {
   final List<Map<String, dynamic>> questions;
   final String quizTitle;
   final String quizId;
+  final void Function(dynamic questionId, bool isCorrect)? onAnswerSubmitted;
 
   const CustomMCQWidget({
     super.key,
     required this.questions,
     required this.quizTitle,
     required this.quizId,
+    this.onAnswerSubmitted,
   });
 
   @override
@@ -96,10 +98,32 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
       isAnswerSubmitted = true;
     });
 
-    final correctAnswer =
-        widget.questions[currentQuestionIndex]['answer'] as String? ??
-        widget.questions[currentQuestionIndex]['correctAnswer'] as String;
-    bool isCorrect = selectedAnswer == correctAnswer;
+    final q = widget.questions[currentQuestionIndex];
+    final List<dynamic> opts = (q['options'] is List) ? q['options'] as List : <dynamic>[];
+    String? correctAnswerText = (q['answer'] as String?) ?? (q['correctAnswer'] as String?);
+    bool isCorrect;
+    if (opts.isNotEmpty && opts.first is Map) {
+      dynamic match;
+      try {
+        match = opts.firstWhere((o) => ((o['optionText'] ?? o['text'] ?? o['value'] ?? '').toString()) == selectedAnswer);
+      } catch (_) {
+        match = null;
+      }
+      isCorrect = match != null && ((match['isCorrect'] == true) || (match['correct'] == true) || (match['answer'] == true));
+      if (correctAnswerText == null) {
+        try {
+          final corr = opts.firstWhere((o) => o['isCorrect'] == true || o['correct'] == true || o['answer'] == true);
+          correctAnswerText = (corr['optionText'] ?? corr['text'] ?? corr['value'] ?? '').toString();
+        } catch (_) {
+          correctAnswerText = '';
+        }
+      }
+    } else {
+      isCorrect = selectedAnswer == correctAnswerText;
+    }
+
+    // Notify host once correctness is known
+    widget.onAnswerSubmitted?.call(q['questionId'], isCorrect);
 
     if (isCorrect) {
       setState(() {
@@ -109,8 +133,9 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
       _showEnhancedDialog(
         title: 'Fantastic! 🎉',
         message:
-            widget.questions[currentQuestionIndex]['funFact'] as String? ??
-            widget.questions[currentQuestionIndex]['explanation'] as String,
+            (widget.questions[currentQuestionIndex]['funFact'] as String? ??
+            widget.questions[currentQuestionIndex]['explanation'] as String? ??
+            ''),
         isSuccess: true,
         onPressed: _nextQuestion,
       );
@@ -118,7 +143,8 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
       _showEnhancedDialog(
         title: 'Almost there! 🤔',
         message:
-            'That\'s not quite right. The correct answer is $correctAnswer. ${widget.questions[currentQuestionIndex]['funFact'] as String? ?? widget.questions[currentQuestionIndex]['explanation'] as String}',
+            'That\'s not quite right. The correct answer is $correctAnswerText. '
+            '${(widget.questions[currentQuestionIndex]['funFact'] as String? ?? widget.questions[currentQuestionIndex]['explanation'] as String? ?? '')}',
         isSuccess: false,
         onPressed: _nextQuestion,
       );
@@ -157,7 +183,8 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
     final savedPoints = prefs.getInt('points_${widget.quizId}') ?? 0;
     if (!mounted) return;
     setState(() {
-      currentQuestionIndex = savedIndex.clamp(0, widget.questions.length - 1);
+      final maxIndex = widget.questions.isEmpty ? 0 : (widget.questions.length - 1);
+      currentQuestionIndex = savedIndex.clamp(0, maxIndex);
       points = savedPoints;
     });
   }
@@ -200,80 +227,82 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
       child: Scaffold(
         extendBodyBehindAppBar: true,
         appBar: _buildEnhancedAppBar(context),
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.purple[100]!,
-                Colors.pink[100]!,
-                Colors.cyan[50]!,
-                Colors.purple[50]!,
-              ],
-              stops: const [0.0, 0.3, 0.7, 1.0],
-            ),
-          ),
-          child: SafeArea(
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: Column(
-                children: [
-                  // Fixed header section
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+        body: widget.questions.isEmpty
+            ? Center(child: CircularProgressIndicator())
+            : Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.purple[100]!,
+                      Colors.pink[100]!,
+                      Colors.cyan[50]!,
+                      Colors.purple[50]!,
+                    ],
+                    stops: const [0.0, 0.3, 0.7, 1.0],
+                  ),
+                ),
+                child: SafeArea(
+                  child: SlideTransition(
+                    position: _slideAnimation,
                     child: Column(
                       children: [
-                        _buildProgressIndicator(),
-                        const SizedBox(height: 12),
-                        _buildPointsDisplay(),
-                      ],
-                    ),
-                  ),
-                  
-                  // Scrollable content
-                  Expanded(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 10),
-                            _buildQuestionCard(),
-                            const SizedBox(height: 16),
-                            if (showHint) ...[
-                              _buildHintCard(),
-                              const SizedBox(height: 16),
+                        // Fixed header section
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                          child: Column(
+                            children: [
+                              _buildProgressIndicator(),
+                              const SizedBox(height: 12),
+                              _buildPointsDisplay(),
                             ],
-                            _buildAnswerOptions(),
-                            const SizedBox(height: 20),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
-                  
-                  // Fixed bottom action buttons
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, -5),
+                        
+                        // Scrollable content
+                        Expanded(
+                          child: SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Column(
+                                children: [
+                                  const SizedBox(height: 10),
+                                  _buildQuestionCard(),
+                                  const SizedBox(height: 16),
+                                  if (showHint) ...[
+                                    _buildHintCard(),
+                                    const SizedBox(height: 16),
+                                  ],
+                                  _buildAnswerOptions(),
+                                  const SizedBox(height: 20),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        
+                        // Fixed bottom action buttons
+                        Container(
+                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.9),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, -5),
+                              ),
+                            ],
+                          ),
+                          child: _buildActionButtons(),
                         ),
                       ],
                     ),
-                    child: _buildActionButtons(),
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -337,8 +366,8 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
             child: ShaderMask(
               shaderCallback:
                   (bounds) => LinearGradient(
-                    colors: [Colors.white, Colors.white.withOpacity(0.8)],
-                  ).createShader(bounds),
+                colors: [Colors.white, Colors.white.withOpacity(0.8)],
+              ).createShader(bounds),
               child: Text(
                 widget.quizTitle,
                 overflow: TextOverflow.ellipsis,
@@ -453,6 +482,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   Widget _buildQuestionCard() {
     final questionData = widget.questions[currentQuestionIndex];
     final imagePath =
+        questionData['imageUrl'] as String? ??
         questionData['image'] as String? ??
         questionData['imagePath'] as String?;
 
@@ -526,7 +556,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
               ),
             ),
           Text(
-            questionData['question'],
+            (questionData['questionText'] ?? questionData['question'] ?? '').toString(),
             style: GoogleFonts.poppins(
               fontSize: 22,
               fontWeight: FontWeight.w700,
@@ -572,7 +602,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              widget.questions[currentQuestionIndex]['hint'],
+              (widget.questions[currentQuestionIndex]['hint'] as String? ?? 'Keep trying!'),
               style: GoogleFonts.poppins(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
@@ -598,16 +628,23 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
             crossAxisSpacing: 12,
             childAspectRatio: constraints.maxWidth > 400 ? 1.8 : 1.6,
           ),
-          itemCount: widget.questions[currentQuestionIndex]['options'].length,
+          itemCount: ((widget.questions[currentQuestionIndex]['options'] as List?) ?? const []).length,
           itemBuilder: (context, index) {
-            String option =
-                widget.questions[currentQuestionIndex]['options'][index];
+            final options = (widget.questions[currentQuestionIndex]['options'] as List?) ?? const [];
+            final opt = options[index];
+            final String option = (opt is Map)
+                ? (opt['optionText'] ?? opt['text'] ?? opt['value'] ?? '').toString()
+                : opt.toString();
             bool isSelected = selectedAnswer == option;
-            bool isCorrect =
-                option ==
-                (widget.questions[currentQuestionIndex]['answer'] as String? ??
-                    widget.questions[currentQuestionIndex]['correctAnswer']
-                        as String);
+            bool isCorrect;
+            if (opt is Map) {
+              isCorrect = (opt['isCorrect'] == true) || (opt['correct'] == true) || (opt['answer'] == true);
+            } else {
+              final String? correctAnswerText =
+                  (widget.questions[currentQuestionIndex]['answer'] as String?) ??
+                  (widget.questions[currentQuestionIndex]['correctAnswer'] as String?);
+              isCorrect = option == correctAnswerText;
+            }
             bool showResult = isAnswerSubmitted;
 
             Color buttonColor;
@@ -647,10 +684,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                             offset: const Offset(0, 6),
                           ),
                         ],
-                        border:
-                            isSelected
-                                ? Border.all(color: Colors.white, width: 2.5)
-                                : null,
+                        border: isSelected ? Border.all(color: Colors.white, width: 2.5) : null,
                       ),
                       child: Material(
                         color: Colors.transparent,
