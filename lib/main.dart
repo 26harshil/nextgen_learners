@@ -65,6 +65,10 @@ class MyApp extends StatelessWidget {
            name: ANIMAL_SOUND_SCREEN,
            page: () => const QuizScreen(quizId: 'animalsound'),
          ),
+          GetPage(
+           name: BIRDS_SCREEN,
+           page: () => const QuizScreen(quizId: 'birds'),
+         ),
       ],
     );
   }

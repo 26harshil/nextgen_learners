@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:math';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
@@ -35,8 +35,17 @@ class QuizService {
         final Map<String, dynamic> item = (rawItem is Map) ? Map<String, dynamic>.from(rawItem) : <String, dynamic>{};
 
         final String questionText = (item['questionText'] ?? item['question'] ?? '').toString();
-        final String imageUrl = (item['imageUrl'] ?? item['image'] ?? '').toString();
+        final String imageUrl = (item['imageUrl'] ?? item['image'] ?? '').toString().trim();
         final String soundUrl = (item['soundUrl'] ?? item['sound'] ?? '').toString();
+        final String? soundBase64 = (item['sound_data'] ?? item['soundData'] ?? item['soundBase64'])?.toString();
+        Uint8List? soundBytes;
+        if (soundBase64 != null && soundBase64.isNotEmpty) {
+          try {
+            soundBytes = base64.decode(soundBase64);
+          } catch (_) {
+            soundBytes = null;
+          }
+        }
         final String hint = (item['hint'] ?? '').toString();
         final String funFact = (item['funFact'] ?? item['info'] ?? '').toString();
         final dynamic qId = item.containsKey('questionId') ? item['questionId'] : null;

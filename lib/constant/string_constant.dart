@@ -23,6 +23,7 @@ const Color VEHICLES_COLOR_SKY_BLUE = Color(0xFF87CEEB);
 const String COLORS_Screen = '/colors';
 const String FRUITS_SCREEN = '/fruits';
 const String MATH_SCREEN = '/math';
+const String BIRDS_SCREEN = '/birds';
 const String VEGETABLES_SCREEN = '/vegetables';
 const String VEHICLE_NAME_SCREEN = '/vehicals';
 const String ANIMAL_Name_SCREEN = '/animalname';

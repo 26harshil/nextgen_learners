@@ -1,4 +1,6 @@
 import 'package:nextgen_learners/constant/import_export.dart' hide AudioPlayer;
+import 'package:audioplayers/audioplayers.dart';
+import 'dart:typed_data';
 
 class CustomMCQWidget extends StatefulWidget {
   final List<Map<String, dynamic>> questions;
@@ -26,6 +28,11 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   bool showHint = false;
   bool isAnswerSubmitted = false;
 
+  // Audio
+  late final AudioPlayer _audioPlayer;
+  bool _isPlaying = false;
+  bool _isLoadingSound = false;
+
   late AnimationController _pulseController;
   late AnimationController _slideController;
   late AnimationController _scaleController;
@@ -37,6 +44,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   void initState() {
     super.initState();
     _setupAnimations();
+    _initAudio();
     _loadProgress();
   }
 
@@ -76,8 +84,25 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
     _pulseController.repeat(reverse: true);
   }
 
+  void _initAudio() {
+    _audioPlayer = AudioPlayer();
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      if (!mounted) return;
+      setState(() {
+        _isPlaying = state == PlayerState.playing;
+      });
+    });
+  }
+
   @override
   void dispose() {
+    // Stop and dispose audio
+    try {
+      _audioPlayer.stop();
+    } catch (_) {}
+    try {
+      _audioPlayer.dispose();
+    } catch (_) {}
     _pulseController.dispose();
     _slideController.dispose();
     _scaleController.dispose();
@@ -153,6 +178,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
 
   void _nextQuestion() async {
     Navigator.of(context).pop();
+    await _stopAudio();
     if (currentQuestionIndex < widget.questions.length - 1) {
       setState(() {
         currentQuestionIndex++;
@@ -485,6 +511,23 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
         questionData['imageUrl'] as String? ??
         questionData['image'] as String? ??
         questionData['imagePath'] as String?;
+    final Uint8List? soundBytes = questionData['soundDataBytes'] as Uint8List?;
+    final String soundUrl = (questionData['soundUrl'] ?? questionData['sound'] ?? '').toString();
+    final bool hasSound = (soundBytes != null && soundBytes.isNotEmpty) || soundUrl.isNotEmpty;
+
+    final String normalizedImage = (imagePath ?? '').trim();
+    String? networkImageUrl;
+    if (normalizedImage.isNotEmpty) {
+      if (normalizedImage.startsWith('http') || normalizedImage.startsWith('data:')) {
+        networkImageUrl = normalizedImage;
+      } else if (normalizedImage.startsWith('/')) {
+        // Relative to API host
+        networkImageUrl = ApiConfig.baseHost + normalizedImage.substring(1);
+      } else if (!normalizedImage.startsWith('assets/')) {
+        // Likely server-relative path without leading slash
+        networkImageUrl = ApiConfig.baseHost + normalizedImage;
+      }
+    }
 
     return Container(
       width: double.infinity,
@@ -505,7 +548,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
       ),
       child: Column(
         children: [
-          if (imagePath != null && imagePath.isNotEmpty)
+          if (normalizedImage.isNotEmpty)
             Container(
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
@@ -520,9 +563,9 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: imagePath.startsWith('http')
+                child: networkImageUrl != null
                     ? Image.network(
-                        imagePath,
+                        networkImageUrl,
                         height: 120,
                         width: double.infinity,
                         fit: BoxFit.contain,
@@ -538,7 +581,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                             ),
                       )
                     : Image.asset(
-                        imagePath,
+                        normalizedImage,
                         height: 120,
                         width: double.infinity,
                         fit: BoxFit.contain,
@@ -565,6 +608,27 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
             ),
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: 12),
+          if (hasSound)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isLoadingSound ? null : _playOrStopSound,
+                icon: _isLoadingSound
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : Icon(_isPlaying ? Icons.stop_circle : Icons.volume_up),
+                label: Text(_isPlaying ? 'Stop Sound' : 'Play Sound'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple[500],
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -807,6 +871,60 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
         ),
       ),
     );
+  }
+
+  Future<void> _playOrStopSound() async {
+    if (_isLoadingSound) return;
+    final q = widget.questions[currentQuestionIndex];
+    final Uint8List? soundBytes = q['soundDataBytes'] as Uint8List?;
+    final String soundUrl = (q['soundUrl'] ?? q['sound'] ?? '').toString();
+    if (_isPlaying) {
+      await _stopAudio();
+      return;
+    }
+    setState(() => _isLoadingSound = true);
+    try {
+      await _audioPlayer.stop();
+      if (soundBytes != null && soundBytes.isNotEmpty) {
+        await _audioPlayer.play(BytesSource(soundBytes));
+      } else if (soundUrl.isNotEmpty) {
+        if (soundUrl.startsWith('http')) {
+          await _audioPlayer.play(UrlSource(soundUrl));
+        } else if (soundUrl.startsWith('assets/')) {
+          final rel = soundUrl.replaceFirst(RegExp(r'^assets/'), '');
+          // Try AssetSource first; on web, assets are bundled
+          try {
+            await _audioPlayer.play(AssetSource(rel));
+          } catch (_) {
+            // Fallback to UrlSource using the assets/ path
+            await _audioPlayer.play(UrlSource(soundUrl));
+          }
+        } else {
+          // Unknown format; try as URL
+          await _audioPlayer.play(UrlSource(soundUrl));
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No sound available for this question.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to play sound: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingSound = false);
+    }
+  }
+
+  Future<void> _stopAudio() async {
+    try {
+      await _audioPlayer.stop();
+    } catch (_) {}
   }
 
   void _showEnhancedDialog({

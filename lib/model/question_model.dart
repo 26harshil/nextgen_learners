@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
+import 'dart:convert';
 
 class Quiz {
   final String questionText;
@@ -6,6 +8,8 @@ class Quiz {
   final String hint;
   final String funFact;
   final List<Option> options;
+  final String soundUrl; // optional fallback if bytes not present
+  final Uint8List? soundDataBytes; // decoded from base64 JSON
 
   Quiz({
     required this.questionText,
@@ -13,6 +17,8 @@ class Quiz {
     required this.hint,
     required this.funFact,
     required this.options,
+    this.soundUrl = '',
+    this.soundDataBytes,
   });
 
   factory Quiz.fromJson(Map<String, dynamic> json) {
@@ -21,6 +27,19 @@ class Quiz {
           (json['options'] as List<dynamic>? ?? [])
               .map((e) => Option.fromJson(e as Map<String, dynamic>))
               .toList();
+
+      // Fallbacks for different backends/fields
+      final String soundUrl =
+          json['soundUrl']?.toString() ?? json['sound']?.toString() ?? '';
+      final String? soundBase64 = (json['soundData'] ?? json['sound_data'] ?? json['soundBase64'])?.toString();
+      Uint8List? soundBytes;
+      if (soundBase64 != null && soundBase64.isNotEmpty) {
+        try {
+          soundBytes = base64.decode(soundBase64);
+        } catch (_) {
+          soundBytes = null;
+        }
+      }
       return Quiz(
         questionText:
             json['questionText']?.toString() ??
@@ -31,6 +50,8 @@ class Quiz {
         hint: json['hint']?.toString() ?? '',
         funFact: json['funFact']?.toString() ?? json['info']?.toString() ?? '',
         options: opts,
+        soundUrl: soundUrl,
+        soundDataBytes: soundBytes,
       );
     } catch (e, st) {
       if (kDebugMode) {
@@ -44,6 +65,8 @@ class Quiz {
         hint: '',
         funFact: '',
         options: [],
+        soundUrl: '',
+        soundDataBytes: null,
       );
     }
   }
@@ -55,6 +78,8 @@ class Quiz {
       'hint': hint,
       'funFact': funFact,
       'options': options.map((option) => option.toJson()).toList(),
+      'soundUrl': soundUrl,
+      'soundDataBytes': soundDataBytes,
     };
   }
 }
