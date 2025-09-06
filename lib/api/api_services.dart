@@ -4,8 +4,8 @@ import 'package:get/get.dart';
 import 'package:nextgen_learners/model/question_model.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:5379/Quizz';
-
+  static const String baseUrl = 'https://nextgen-learners-backend.onrender.com/Quizz';
+// http://localhost:5379/Quizz
   Future<List<Quiz>> fetchQuiz(
     String category,
     RxList<Map<String, dynamic>> targetList,

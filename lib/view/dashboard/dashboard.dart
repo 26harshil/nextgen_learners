@@ -142,39 +142,48 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children:
-                  badges.map((id) {
-                    final path = 'assets/badges/$id.png';
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                      child: Tooltip(
-                        message: 'Completed: $id',
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.asset(
-                            path,
-                            height: 48,
-                            width: 48,
-                            fit: BoxFit.cover,
-                            errorBuilder:
-                                (context, error, stackTrace) => Container(
-                                  height: 48,
-                                  width: 48,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: Colors.green[200],
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(
-                                    Icons.emoji_events,
-                                    color: Colors.white,
-                                  ),
-                                ),
+              children: badges.map((id) {
+                final badgeMap = {
+                  'animal_name': 'animalQuizz',
+                  'animal_sound': 'soundQuizz',
+                  'math': 'mathQuizz',
+                  'vehicals': 'vehicleQuizz',
+                  'fruits': 'fruitQuizz',
+                  'vegetables': 'vegetableQuizz',
+                  'colors': 'colorQuizz',
+                  'birds': 'birdQuizz',
+                };
+                final badgeName = badgeMap[id] ?? id;
+                final path = 'badges/$badgeName.png';
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                  child: Tooltip(
+                    message: 'Completed: ${badgeName.replaceAll('Quizz', '')}',
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        path,
+                        height: 48,
+                        width: 48,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          height: 48,
+                          width: 48,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.green[200],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.emoji_events,
+                            color: Colors.white,
                           ),
                         ),
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
           ),
         );
@@ -379,7 +388,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                 _tileWithTick(
                                   quizId: 'animal_name',
                                   tile: CustomContainer(
-                                    key: UniqueKey(), // Ensure unique key
+                                    key: UniqueKey(),
                                     newPage: ANIMAL_Name_SCREEN,
                                     title: "Animals",
                                     subtitle: "Meet cute animals!",
@@ -498,5 +507,37 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         ),
       ),
     );
+  }
+}
+
+// Updated _markCompleted method for CustomMCQWidget to handle badge awarding with 75% score requirement
+Future<void> _markCompleted(dynamic widget) async {
+  final prefs = await SharedPreferences.getInstance();
+  // Assume widget.score is the number of correct answers and widget.totalQuestions is the total number of questions
+  // Each question is worth 1 point for simplicity
+  final double scorePercentage = (widget.score / widget.totalQuestions) * 100;
+  
+  // Only mark as completed and award badge if score is at least 75%
+  if (scorePercentage >= 75.0) {
+    await prefs.setBool('completed_${widget.quizId}', true);
+    await prefs.remove('progress_${widget.quizId}');
+    await prefs.remove('points_${widget.quizId}');
+    final badges = prefs.getStringList('badges') ?? [];
+    // Map quiz IDs to badge names
+    const badgeMap = {
+      'animal_name': 'animalQuizz',
+      'animal_sound': 'soundQuizz',
+      'math': 'mathQuizz',
+      'vehicals': 'vehicleQuizz',
+      'fruits': 'fruitQuizz',
+      'vegetables': 'vegetableQuizz',
+      'colors': 'colorQuizz',
+      'birds': 'birdQuizz',
+    };
+    final badgeName = badgeMap[widget.quizId] ?? widget.quizId;
+    if (!badges.contains(badgeName)) {
+      badges.add(badgeName);
+      await prefs.setStringList('badges', badges);
+    }
   }
 }

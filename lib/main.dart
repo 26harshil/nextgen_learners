@@ -24,51 +24,52 @@ class MyApp extends StatelessWidget {
       ),
 
       initialRoute: SPLASH_SCREEN,
-     getPages: [
+      getPages: [
         // Ensure splash route exists so initialRoute is resolvable
+        GetPage(name: SPLASH_SCREEN, page: () => const SplashScreen()),
         GetPage(
-          name: SPLASH_SCREEN,
-          page: () => const SplashScreen(),
+          name: DASHBOARD_SCREEN,
+          page: () => const Dashboard(totalPoints: 0),
+          binding: BindingsBuilder(() {
+            Get.put(DashboardController());
+          }),
         ),
-         GetPage(
-           name: DASHBOARD_SCREEN,
-           page: () => const Dashboard(totalPoints: 0),
-           binding: BindingsBuilder(() {
-             Get.put(DashboardController());
-           }),
-         ),
-         GetPage(
-           name: COLORS_Screen,
-           page: () => const QuizScreen(quizId: 'colors'),
-         ),
-         GetPage(
-           name: FRUITS_SCREEN,
-           page: () => const QuizScreen(quizId: 'fruits'),
-         ),
-         GetPage(
-           name: VEGETABLES_SCREEN,
-           page: () => const QuizScreen(quizId: 'vegetables'),
-         ),
-         GetPage(
-           name: VEHICLE_NAME_SCREEN,
-           page: () => const QuizScreen(quizId: 'vehicals'),
-         ),
-         GetPage(
-           name: MATH_SCREEN,
-           page: () => const QuizScreen(quizId: 'math'),
-         ),
-         GetPage(
-           name: ANIMAL_Name_SCREEN,
-           page: () => const QuizScreen(quizId: 'animalname'),
-         ),
-         GetPage(
-           name: ANIMAL_SOUND_SCREEN,
-           page: () => const QuizScreen(quizId: 'animalsound'),
-         ),
-          GetPage(
-           name: BIRDS_SCREEN,
-           page: () => const QuizScreen(quizId: 'birds'),
-         ),
+        GetPage(
+          name: COLORS_Screen,
+          page: () => const QuizScreen(quizId: 'colors'),
+        ),
+        GetPage(
+          name: FRUITS_SCREEN,
+          page: () => const QuizScreen(quizId: 'fruits'),
+        ),
+        GetPage(
+          name: VEGETABLES_SCREEN,
+          page: () => const QuizScreen(quizId: 'vegetables'),
+        ),
+        GetPage(
+          name: VEHICLE_NAME_SCREEN,
+          page: () => const QuizScreen(quizId: 'vehicals'),
+        ),
+        GetPage(
+          name: MATH_SCREEN,
+          page: () => const QuizScreen(quizId: 'math'),
+        ),
+        GetPage(
+          name: ANIMAL_Name_SCREEN,
+          page: () => const QuizScreen(quizId: 'animalname'),
+        ),
+        GetPage(
+          name: ANIMAL_SOUND_SCREEN,
+          page:
+              () => AnimalSoundView(
+                questions: Animal_sound_questions,
+                quizId: 'animalsound',
+              ),
+        ),
+        GetPage(
+          name: BIRDS_SCREEN,
+          page: () => const QuizScreen(quizId: 'birds'),
+        ),
       ],
     );
   }

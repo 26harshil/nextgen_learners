@@ -1,5 +1,6 @@
 import 'package:nextgen_learners/constant/import_export.dart' hide AudioPlayer;
 import 'package:audioplayers/audioplayers.dart';
+import 'package:nextgen_learners/services/api_config.dart';
 import 'dart:typed_data';
 
 class CustomMCQWidget extends StatefulWidget {
@@ -28,6 +29,11 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   bool showHint = false;
   bool isAnswerSubmitted = false;
 
+  // Store answers for each question
+  Map<int, String> userAnswers = {};
+  Map<int, bool> questionResults = {};
+  Set<int> viewedQuestions = {};
+
   // Audio
   late final AudioPlayer _audioPlayer;
   bool _isPlaying = false;
@@ -46,6 +52,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
     _setupAnimations();
     _initAudio();
     _loadProgress();
+    viewedQuestions.add(0);
   }
 
   void _setupAnimations() {
@@ -94,9 +101,48 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
     });
   }
 
+  Future<void> _playOrStopSound() async {
+    final questionData = widget.questions[currentQuestionIndex];
+    final Uint8List? soundBytes = questionData['soundDataBytes'] as Uint8List?;
+    final String soundUrl =
+        (questionData['soundUrl'] ?? questionData['sound'] ?? '').toString();
+
+    if (_isPlaying) {
+      await _stopAudio();
+    } else {
+      setState(() {
+        _isLoadingSound = true;
+      });
+      try {
+        if (soundBytes != null && soundBytes.isNotEmpty) {
+          await _audioPlayer.play(BytesSource(soundBytes));
+        } else if (soundUrl.isNotEmpty) {
+          await _audioPlayer.play(UrlSource(soundUrl));
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error playing sound: $e')));
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoadingSound = false;
+          });
+        }
+      }
+    }
+  }
+
+  Future<void> _stopAudio() async {
+    try {
+      await _audioPlayer.stop();
+    } catch (_) {}
+  }
+
   @override
   void dispose() {
-    // Stop and dispose audio
     try {
       _audioPlayer.stop();
     } catch (_) {}
@@ -110,35 +156,56 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   }
 
   void selectAnswer(String answer) {
-    if (isAnswerSubmitted) return;
+    if (userAnswers.containsKey(currentQuestionIndex))
+      return; // Already answered
     setState(() {
       selectedAnswer = answer;
     });
   }
 
   void submitAnswer() {
-    if (selectedAnswer == null || isAnswerSubmitted) return;
+    if (selectedAnswer == null || userAnswers.containsKey(currentQuestionIndex))
+      return;
 
     setState(() {
       isAnswerSubmitted = true;
+      userAnswers[currentQuestionIndex] = selectedAnswer!;
     });
 
     final q = widget.questions[currentQuestionIndex];
-    final List<dynamic> opts = (q['options'] is List) ? q['options'] as List : <dynamic>[];
-    String? correctAnswerText = (q['answer'] as String?) ?? (q['correctAnswer'] as String?);
+    final List<dynamic> opts =
+        (q['options'] is List) ? q['options'] as List : <dynamic>[];
+    String? correctAnswerText =
+        (q['answer'] as String?) ?? (q['correctAnswer'] as String?);
     bool isCorrect;
+
     if (opts.isNotEmpty && opts.first is Map) {
       dynamic match;
       try {
-        match = opts.firstWhere((o) => ((o['optionText'] ?? o['text'] ?? o['value'] ?? '').toString()) == selectedAnswer);
+        match = opts.firstWhere(
+          (o) =>
+              ((o['optionText'] ?? o['text'] ?? o['value'] ?? '').toString()) ==
+              selectedAnswer,
+        );
       } catch (_) {
         match = null;
       }
-      isCorrect = match != null && ((match['isCorrect'] == true) || (match['correct'] == true) || (match['answer'] == true));
+      isCorrect =
+          match != null &&
+          ((match['isCorrect'] == true) ||
+              (match['correct'] == true) ||
+              (match['answer'] == true));
       if (correctAnswerText == null) {
         try {
-          final corr = opts.firstWhere((o) => o['isCorrect'] == true || o['correct'] == true || o['answer'] == true);
-          correctAnswerText = (corr['optionText'] ?? corr['text'] ?? corr['value'] ?? '').toString();
+          final corr = opts.firstWhere(
+            (o) =>
+                o['isCorrect'] == true ||
+                o['correct'] == true ||
+                o['answer'] == true,
+          );
+          correctAnswerText =
+              (corr['optionText'] ?? corr['text'] ?? corr['value'] ?? '')
+                  .toString();
         } catch (_) {
           correctAnswerText = '';
         }
@@ -147,7 +214,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
       isCorrect = selectedAnswer == correctAnswerText;
     }
 
-    // Notify host once correctness is known
+    questionResults[currentQuestionIndex] = isCorrect;
     widget.onAnswerSubmitted?.call(q['questionId'], isCorrect);
 
     if (isCorrect) {
@@ -159,10 +226,11 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
         title: 'Fantastic! 🎉',
         message:
             (widget.questions[currentQuestionIndex]['funFact'] as String? ??
-            widget.questions[currentQuestionIndex]['explanation'] as String? ??
-            ''),
+                widget.questions[currentQuestionIndex]['explanation']
+                    as String? ??
+                ''),
         isSuccess: true,
-        onPressed: _nextQuestion,
+        onPressed: _handleDialogContinue,
       );
     } else {
       _showEnhancedDialog(
@@ -171,30 +239,215 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
             'That\'s not quite right. The correct answer is $correctAnswerText. '
             '${(widget.questions[currentQuestionIndex]['funFact'] as String? ?? widget.questions[currentQuestionIndex]['explanation'] as String? ?? '')}',
         isSuccess: false,
-        onPressed: _nextQuestion,
+        onPressed: _handleDialogContinue,
       );
     }
   }
 
-  void _nextQuestion() async {
+  void _showEnhancedDialog({
+    required String title,
+    required String message,
+    required bool isSuccess,
+    required VoidCallback onPressed,
+  }) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => ScaleTransition(
+            scale: _scaleAnimation,
+            child: AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              backgroundColor: Colors.white,
+              title: Row(
+                children: [
+                  Icon(
+                    isSuccess ? Icons.check_circle : Icons.error_outline,
+                    color: isSuccess ? Colors.green[600] : Colors.red[600],
+                    size: 30,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: GoogleFonts.poppins(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.purple[800],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Text(
+                  message.isEmpty ? 'No additional info available.' : message,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: Colors.grey[800],
+                    height: 1.4,
+                  ),
+                ),
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: onPressed,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple[600],
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                  ),
+                  child: Text(
+                    'Continue',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
+  void _handleDialogContinue() {
     Navigator.of(context).pop();
-    await _stopAudio();
     if (currentQuestionIndex < widget.questions.length - 1) {
-      setState(() {
-        currentQuestionIndex++;
-        selectedAnswer = null;
-        isAnswerSubmitted = false;
-        showHint = false;
-        _slideController.reset();
-        _scaleController.reset();
-        _startAnimations();
-      });
-      _saveProgress();
+      _nextQuestion();
     } else {
-      await _markCompleted();
-      // Quiz complete, navigate to DashboardScreen
-      Get.off(() => Dashboard(totalPoints: points));
+      _checkQuizCompletion();
     }
+  }
+
+  void _nextQuestion() async {
+    if (currentQuestionIndex >= widget.questions.length - 1) {
+      _checkQuizCompletion();
+      return;
+    }
+
+    await _stopAudio();
+    setState(() {
+      currentQuestionIndex++;
+      viewedQuestions.add(currentQuestionIndex);
+      selectedAnswer = userAnswers[currentQuestionIndex];
+      isAnswerSubmitted = userAnswers.containsKey(currentQuestionIndex);
+      showHint = false;
+      _slideController.reset();
+      _scaleController.reset();
+      _startAnimations();
+    });
+    _saveProgress();
+  }
+
+  void _previousQuestion() async {
+    if (currentQuestionIndex <= 0) return;
+
+    await _stopAudio();
+    setState(() {
+      currentQuestionIndex--;
+      selectedAnswer = userAnswers[currentQuestionIndex];
+      isAnswerSubmitted = userAnswers.containsKey(currentQuestionIndex);
+      showHint = false;
+      _slideController.reset();
+      _scaleController.reset();
+      _startAnimations();
+    });
+  }
+
+  void _checkQuizCompletion() async {
+    // Check if all questions are answered
+    if (userAnswers.length == widget.questions.length) {
+      await _markCompleted();
+      Get.off(() => Dashboard(totalPoints: points));
+    } else {
+      // Show message that there are unanswered questions
+      _showIncompleteQuizDialog();
+    }
+  }
+
+  void _showIncompleteQuizDialog() {
+    final unanswered = <int>[];
+    for (int i = 0; i < widget.questions.length; i++) {
+      if (!userAnswers.containsKey(i)) {
+        unanswered.add(i + 1);
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Text(
+              'Quiz Not Complete',
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Colors.purple[800],
+              ),
+            ),
+            content: Text(
+              'You have ${unanswered.length} unanswered question(s): ${unanswered.join(", ")}.\n\nWould you like to go back and answer them?',
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                color: Colors.grey[800],
+                height: 1.4,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _markCompleted();
+                  Get.off(() => Dashboard(totalPoints: points));
+                },
+                child: Text(
+                  'Submit Anyway',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: Colors.red[600],
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  setState(() {
+                    currentQuestionIndex = unanswered.first - 1;
+                    selectedAnswer = null;
+                    isAnswerSubmitted = false;
+                  });
+                },
+                child: Text(
+                  'Go to Question',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple[600],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+    );
   }
 
   void toggleHint() {
@@ -209,7 +462,8 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
     final savedPoints = prefs.getInt('points_${widget.quizId}') ?? 0;
     if (!mounted) return;
     setState(() {
-      final maxIndex = widget.questions.isEmpty ? 0 : (widget.questions.length - 1);
+      final maxIndex =
+          widget.questions.isEmpty ? 0 : (widget.questions.length - 1);
       currentQuestionIndex = savedIndex.clamp(0, maxIndex);
       points = savedPoints;
     });
@@ -233,13 +487,33 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
     }
   }
 
+  String? _getCorrectAnswer(int index) {
+    final q = widget.questions[index];
+    final List<dynamic> opts =
+        (q['options'] is List) ? q['options'] as List : <dynamic>[];
+    String? correctAnswerText =
+        (q['answer'] as String?) ?? (q['correctAnswer'] as String?);
+
+    if (correctAnswerText == null && opts.isNotEmpty && opts.first is Map) {
+      try {
+        final corr = opts.firstWhere(
+          (o) =>
+              o['isCorrect'] == true ||
+              o['correct'] == true ||
+              o['answer'] == true,
+        );
+        correctAnswerText =
+            (corr['optionText'] ?? corr['text'] ?? corr['value'] ?? '')
+                .toString();
+      } catch (_) {
+        correctAnswerText = null;
+      }
+    }
+    return correctAnswerText;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final appBarHeight = AppBar().preferredSize.height;
-    final statusBarHeight = MediaQuery.of(context).padding.top;
-    final availableHeight = screenHeight - appBarHeight - statusBarHeight;
-
     return Theme(
       data: ThemeData(
         primaryColor: Colors.purple[700],
@@ -253,82 +527,88 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
       child: Scaffold(
         extendBodyBehindAppBar: true,
         appBar: _buildEnhancedAppBar(context),
-        body: widget.questions.isEmpty
-            ? Center(child: CircularProgressIndicator())
-            : Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.purple[100]!,
-                      Colors.pink[100]!,
-                      Colors.cyan[50]!,
-                      Colors.purple[50]!,
-                    ],
-                    stops: const [0.0, 0.3, 0.7, 1.0],
+        body:
+            widget.questions.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.purple[100]!,
+                        Colors.pink[100]!,
+                        Colors.cyan[50]!,
+                        Colors.purple[50]!,
+                      ],
+                      stops: const [0.0, 0.3, 0.7, 1.0],
+                    ),
                   ),
-                ),
-                child: SafeArea(
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: Column(
-                      children: [
-                        // Fixed header section
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                          child: Column(
-                            children: [
-                              _buildProgressIndicator(),
-                              const SizedBox(height: 12),
-                              _buildPointsDisplay(),
-                            ],
+                  child: SafeArea(
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: Column(
+                        children: [
+                          // Fixed header section
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                            child: Column(
+                              children: [
+                                _buildQuestionNavigator(),
+                                const SizedBox(height: 12),
+                                // _buildProgressIndicator(),
+                                // const SizedBox(height: 12),
+                                _buildPointsDisplay(),
+                                const SizedBox(height: 12),
+                              ],
+                            ),
                           ),
-                        ),
-                        
-                        // Scrollable content
-                        Expanded(
-                          child: SingleChildScrollView(
-                            physics: const BouncingScrollPhysics(),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              child: Column(
-                                children: [
-                                  const SizedBox(height: 10),
-                                  _buildQuestionCard(),
-                                  const SizedBox(height: 16),
-                                  if (showHint) ...[
-                                    _buildHintCard(),
+
+                          // Scrollable content
+                          Expanded(
+                            child: SingleChildScrollView(
+                              physics: const BouncingScrollPhysics(),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                                child: Column(
+                                  children: [
+                                    const SizedBox(height: 10),
+                                    _buildQuestionCard(),
                                     const SizedBox(height: 16),
+                                    if (showHint) ...[
+                                      _buildHintCard(),
+                                      const SizedBox(height: 16),
+                                    ],
+                                    _buildAnswerOptions(),
+                                    const SizedBox(height: 20),
                                   ],
-                                  _buildAnswerOptions(),
-                                  const SizedBox(height: 20),
-                                ],
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        
-                        // Fixed bottom action buttons
-                        Container(
-                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.9),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, -5),
-                              ),
-                            ],
+
+                          // Fixed bottom action buttons
+                          Container(
+                            padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.9),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, -5),
+                                ),
+                              ],
+                            ),
+                            child: _buildActionButtons(),
                           ),
-                          child: _buildActionButtons(),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
       ),
     );
   }
@@ -392,8 +672,8 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
             child: ShaderMask(
               shaderCallback:
                   (bounds) => LinearGradient(
-                colors: [Colors.white, Colors.white.withOpacity(0.8)],
-              ).createShader(bounds),
+                    colors: [Colors.white, Colors.white.withOpacity(0.8)],
+                  ).createShader(bounds),
               child: Text(
                 widget.quizTitle,
                 overflow: TextOverflow.ellipsis,
@@ -426,41 +706,119 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
     );
   }
 
-  Widget _buildProgressIndicator() {
+  // Widget _buildProgressIndicator() {
+  //   return Container(
+  //     width: double.infinity,
+  //     padding: const EdgeInsets.all(16),
+  //     decoration: BoxDecoration(
+  //       gradient: LinearGradient(
+  //         colors: [
+  //           Colors.white.withOpacity(0.2),
+  //           Colors.white.withOpacity(0.1),
+  //         ],
+  //       ),
+  //       borderRadius: BorderRadius.circular(20),
+  //       border: Border.all(color: Colors.white.withOpacity(0.3)),
+  //     ),
+  //     child: Column(
+  //       children: [
+  //         Text(
+  //           'Question ${currentQuestionIndex + 1} of ${widget.questions.length}',
+  //           style: GoogleFonts.poppins(
+  //             fontSize: 16,
+  //             fontWeight: FontWeight.w600,
+  //             color: Colors.purple[800],
+  //           ),
+  //         ),
+  //         const SizedBox(height: 8),
+  //         ClipRRect(
+  //           borderRadius: BorderRadius.circular(10),
+  //           child: LinearProgressIndicator(
+  //             value: (currentQuestionIndex + 1) / widget.questions.length,
+  //             backgroundColor: Colors.white.withOpacity(0.3),
+  //             valueColor: AlwaysStoppedAnimation<Color>(Colors.purple[400]!),
+  //             minHeight: 8,
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  Widget _buildQuestionNavigator() {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withOpacity(0.2),
-            Colors.white.withOpacity(0.1),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.3)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            'Question ${currentQuestionIndex + 1} of ${widget.questions.length}',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.purple[800],
+      height: 50,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: widget.questions.length,
+        itemBuilder: (context, index) {
+          final bool isAnswered = userAnswers.containsKey(index);
+          final bool isCorrect = questionResults[index] ?? false;
+          final bool isCurrent = index == currentQuestionIndex;
+          final bool isViewed = viewedQuestions.contains(index);
+
+          Color bgColor;
+          IconData? icon;
+
+          if (isCurrent) {
+            bgColor = Colors.purple[600]!;
+          } else if (isAnswered) {
+            bgColor = isCorrect ? Colors.green[500]! : Colors.red[500]!;
+            icon = isCorrect ? Icons.check : Icons.close;
+          } else if (isViewed) {
+            bgColor = Colors.orange[400]!;
+          } else {
+            bgColor = Colors.grey[400]!;
+          }
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  currentQuestionIndex = index;
+                  selectedAnswer = userAnswers[index];
+                  isAnswerSubmitted = userAnswers.containsKey(index);
+                  viewedQuestions.add(index);
+                  showHint = false;
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                width: isCurrent ? 50 : 40,
+                height: isCurrent ? 50 : 40,
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  shape: BoxShape.circle,
+                  border:
+                      isCurrent
+                          ? Border.all(color: Colors.white, width: 3)
+                          : null,
+                  boxShadow: [
+                    BoxShadow(
+                      color: bgColor.withOpacity(0.4),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child:
+                      icon != null
+                          ? Icon(icon, color: Colors.white, size: 20)
+                          : Text(
+                            '${index + 1}',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: isCurrent ? 16 : 14,
+                            ),
+                          ),
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: (currentQuestionIndex + 1) / widget.questions.length,
-              backgroundColor: Colors.white.withOpacity(0.3),
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.purple[400]!),
-              minHeight: 8,
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -512,19 +870,20 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
         questionData['image'] as String? ??
         questionData['imagePath'] as String?;
     final Uint8List? soundBytes = questionData['soundDataBytes'] as Uint8List?;
-    final String soundUrl = (questionData['soundUrl'] ?? questionData['sound'] ?? '').toString();
-    final bool hasSound = (soundBytes != null && soundBytes.isNotEmpty) || soundUrl.isNotEmpty;
+    final String soundUrl =
+        (questionData['soundUrl'] ?? questionData['sound'] ?? '').toString();
+    final bool hasSound =
+        (soundBytes != null && soundBytes.isNotEmpty) || soundUrl.isNotEmpty;
 
     final String normalizedImage = (imagePath ?? '').trim();
     String? networkImageUrl;
     if (normalizedImage.isNotEmpty) {
-      if (normalizedImage.startsWith('http') || normalizedImage.startsWith('data:')) {
+      if (normalizedImage.startsWith('http') ||
+          normalizedImage.startsWith('data:')) {
         networkImageUrl = normalizedImage;
       } else if (normalizedImage.startsWith('/')) {
-        // Relative to API host
         networkImageUrl = ApiConfig.baseHost + normalizedImage.substring(1);
       } else if (!normalizedImage.startsWith('assets/')) {
-        // Likely server-relative path without leading slash
         networkImageUrl = ApiConfig.baseHost + normalizedImage;
       }
     }
@@ -563,43 +922,51 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: networkImageUrl != null
-                    ? Image.network(
-                        networkImageUrl,
-                        height: 120,
-                        width: double.infinity,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) =>
-                            Container(
-                              height: 120,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[200],
-                                borderRadius: BorderRadius.circular(12),
+                child:
+                    networkImageUrl != null
+                        ? Image.network(
+                          networkImageUrl,
+                          height: 120,
+                          width: double.infinity,
+                          fit: BoxFit.contain,
+                          errorBuilder:
+                              (context, error, stackTrace) => Container(
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  color: Colors.grey[400],
+                                  size: 40,
+                                ),
                               ),
-                              child: Icon(Icons.image_not_supported, 
-                                color: Colors.grey[400], size: 40),
-                            ),
-                      )
-                    : Image.asset(
-                        normalizedImage,
-                        height: 120,
-                        width: double.infinity,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) =>
-                            Container(
-                              height: 120,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[200],
-                                borderRadius: BorderRadius.circular(12),
+                        )
+                        : Image.asset(
+                          normalizedImage,
+                          height: 120,
+                          width: double.infinity,
+                          fit: BoxFit.contain,
+                          errorBuilder:
+                              (context, error, stackTrace) => Container(
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  color: Colors.grey[400],
+                                  size: 40,
+                                ),
                               ),
-                              child: Icon(Icons.image_not_supported, 
-                                color: Colors.grey[400], size: 40),
-                            ),
-                      ),
+                        ),
               ),
             ),
           Text(
-            (questionData['questionText'] ?? questionData['question'] ?? '').toString(),
+            (questionData['questionText'] ?? questionData['question'] ?? '')
+                .toString(),
             style: GoogleFonts.poppins(
               fontSize: 22,
               fontWeight: FontWeight.w700,
@@ -614,18 +981,27 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: _isLoadingSound ? null : _playOrStopSound,
-                icon: _isLoadingSound
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : Icon(_isPlaying ? Icons.stop_circle : Icons.volume_up),
+                icon:
+                    _isLoadingSound
+                        ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                        : Icon(
+                          _isPlaying ? Icons.stop_circle : Icons.volume_up,
+                        ),
                 label: Text(_isPlaying ? 'Stop Sound' : 'Play Sound'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.purple[500],
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
             ),
@@ -666,7 +1042,8 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              (widget.questions[currentQuestionIndex]['hint'] as String? ?? 'Keep trying!'),
+              (widget.questions[currentQuestionIndex]['hint'] as String? ??
+                  'Keep trying!'),
               style: GoogleFonts.poppins(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
@@ -681,6 +1058,10 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   }
 
   Widget _buildAnswerOptions() {
+    final bool isReviewMode = userAnswers.containsKey(currentQuestionIndex);
+    final String? userAnswer = userAnswers[currentQuestionIndex];
+    final String? correctAnswer = _getCorrectAnswer(currentQuestionIndex);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return GridView.builder(
@@ -692,27 +1073,39 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
             crossAxisSpacing: 12,
             childAspectRatio: constraints.maxWidth > 400 ? 1.8 : 1.6,
           ),
-          itemCount: ((widget.questions[currentQuestionIndex]['options'] as List?) ?? const []).length,
+          itemCount:
+              ((widget.questions[currentQuestionIndex]['options'] as List?) ??
+                      const [])
+                  .length,
           itemBuilder: (context, index) {
-            final options = (widget.questions[currentQuestionIndex]['options'] as List?) ?? const [];
+            final options =
+                (widget.questions[currentQuestionIndex]['options'] as List?) ??
+                const [];
             final opt = options[index];
-            final String option = (opt is Map)
-                ? (opt['optionText'] ?? opt['text'] ?? opt['value'] ?? '').toString()
-                : opt.toString();
+            final String option =
+                (opt is Map)
+                    ? (opt['optionText'] ?? opt['text'] ?? opt['value'] ?? '')
+                        .toString()
+                    : opt.toString();
+
             bool isSelected = selectedAnswer == option;
-            bool isCorrect;
-            if (opt is Map) {
-              isCorrect = (opt['isCorrect'] == true) || (opt['correct'] == true) || (opt['answer'] == true);
-            } else {
-              final String? correctAnswerText =
-                  (widget.questions[currentQuestionIndex]['answer'] as String?) ??
-                  (widget.questions[currentQuestionIndex]['correctAnswer'] as String?);
-              isCorrect = option == correctAnswerText;
-            }
-            bool showResult = isAnswerSubmitted;
+            bool isUserAnswer = userAnswer == option;
+            bool isCorrect = option == correctAnswer;
 
             Color buttonColor;
-            if (showResult) {
+            IconData? icon;
+
+            if (isReviewMode) {
+              if (isCorrect) {
+                buttonColor = Colors.green[400]!;
+                icon = Icons.check_circle;
+              } else if (isUserAnswer && !isCorrect) {
+                buttonColor = Colors.red[400]!;
+                icon = Icons.cancel;
+              } else {
+                buttonColor = Colors.grey[400]!;
+              }
+            } else if (isAnswerSubmitted) {
               if (isCorrect) {
                 buttonColor = Colors.green[400]!;
               } else if (isSelected && !isCorrect) {
@@ -721,7 +1114,8 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                 buttonColor = Colors.grey[400]!;
               }
             } else {
-              buttonColor = isSelected ? Colors.purple[500]! : Colors.blue[400]!;
+              buttonColor =
+                  isSelected ? Colors.purple[500]! : Colors.blue[400]!;
             }
 
             return TweenAnimationBuilder(
@@ -731,7 +1125,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                 return Transform.scale(
                   scale: value,
                   child: GestureDetector(
-                    onTap: () => selectAnswer(option),
+                    onTap: isReviewMode ? null : () => selectAnswer(option),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
                       decoration: BoxDecoration(
@@ -744,31 +1138,29 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                         boxShadow: [
                           BoxShadow(
                             color: buttonColor.withOpacity(0.4),
-                            blurRadius: isSelected ? 12 : 6,
+                            blurRadius: isSelected || isUserAnswer ? 12 : 6,
                             offset: const Offset(0, 6),
                           ),
                         ],
-                        border: isSelected ? Border.all(color: Colors.white, width: 2.5) : null,
+                        border:
+                            (isSelected || isUserAnswer)
+                                ? Border.all(color: Colors.white, width: 2.5)
+                                : null,
                       ),
                       child: Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          onTap: () => selectAnswer(option),
+                          onTap:
+                              isReviewMode ? null : () => selectAnswer(option),
                           borderRadius: BorderRadius.circular(16),
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                if (showResult && isCorrect)
-                                  Icon(
-                                    Icons.check_circle,
-                                    color: Colors.white,
-                                    size: 22,
-                                  ),
-                                if (showResult && isSelected && !isCorrect)
-                                  Icon(Icons.cancel, color: Colors.white, size: 22),
-                                if (showResult) const SizedBox(height: 6),
+                                if (icon != null)
+                                  Icon(icon, color: Colors.white, size: 22),
+                                if (icon != null) const SizedBox(height: 6),
                                 Flexible(
                                   child: Text(
                                     option,
@@ -801,245 +1193,130 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
 
   Widget _buildActionButtons() {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
+        // Previous Question Button
         Expanded(
-          child: _buildEnhancedButton(
-            label: isAnswerSubmitted ? 'Next Question' : 'Submit Answer',
-            icon: isAnswerSubmitted ? Icons.arrow_forward : Icons.send,
-            color: Colors.purple[600]!,
-            onPressed: isAnswerSubmitted ? _nextQuestion : submitAnswer,
-            enabled: selectedAnswer != null,
-            isPrimary: true,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ElevatedButton(
+              onPressed: currentQuestionIndex > 0 ? _previousQuestion : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    currentQuestionIndex > 0
+                        ? Colors.purple[600]
+                        : Colors.grey[400],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                elevation: currentQuestionIndex > 0 ? 5 : 0,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.arrow_back, size: 20, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Previous',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-        const SizedBox(width: 12),
+        // Hint Button
         Expanded(
-          child: _buildEnhancedButton(
-            label: showHint ? 'Hide Hint' : 'Show Hint',
-            icon: Icons.lightbulb_outline,
-            color: Colors.amber[600]!,
-            onPressed: toggleHint,
-            isPrimary: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: ElevatedButton(
+              onPressed: toggleHint,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber[600],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                elevation: 5,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    showHint ? Icons.lightbulb_outline : Icons.lightbulb,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    showHint ? 'Hide Hint' : 'Show Hint',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        // Next/Submit Button
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: ElevatedButton(
+              onPressed:
+                  userAnswers.containsKey(currentQuestionIndex)
+                      ? _nextQuestion
+                      : selectedAnswer != null
+                      ? submitAnswer
+                      : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    userAnswers.containsKey(currentQuestionIndex) ||
+                            selectedAnswer != null
+                        ? Colors.purple[600]
+                        : Colors.grey[400],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                elevation:
+                    userAnswers.containsKey(currentQuestionIndex) ||
+                            selectedAnswer != null
+                        ? 5
+                        : 0,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    userAnswers.containsKey(currentQuestionIndex)
+                        ? 'Next'
+                        : 'Submit',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(Icons.arrow_forward, size: 20, color: Colors.white),
+                ],
+              ),
+            ),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildEnhancedButton({
-    required String label,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onPressed,
-    bool enabled = true,
-    bool isPrimary = false,
-  }) {
-    return Container(
-      height: 50,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(25),
-        boxShadow:
-            enabled
-                ? [
-                  BoxShadow(
-                    color: color.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-                : null,
-      ),
-      child: ElevatedButton.icon(
-        onPressed: enabled ? onPressed : null,
-        icon: Icon(icon, size: 18),
-        label: Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-          overflow: TextOverflow.ellipsis,
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: enabled ? color : Colors.grey[400],
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(25),
-          ),
-          elevation: enabled ? 6 : 2,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _playOrStopSound() async {
-    if (_isLoadingSound) return;
-    final q = widget.questions[currentQuestionIndex];
-    final Uint8List? soundBytes = q['soundDataBytes'] as Uint8List?;
-    final String soundUrl = (q['soundUrl'] ?? q['sound'] ?? '').toString();
-    if (_isPlaying) {
-      await _stopAudio();
-      return;
-    }
-    setState(() => _isLoadingSound = true);
-    try {
-      await _audioPlayer.stop();
-      if (soundBytes != null && soundBytes.isNotEmpty) {
-        await _audioPlayer.play(BytesSource(soundBytes));
-      } else if (soundUrl.isNotEmpty) {
-        if (soundUrl.startsWith('http')) {
-          await _audioPlayer.play(UrlSource(soundUrl));
-        } else if (soundUrl.startsWith('assets/')) {
-          final rel = soundUrl.replaceFirst(RegExp(r'^assets/'), '');
-          // Try AssetSource first; on web, assets are bundled
-          try {
-            await _audioPlayer.play(AssetSource(rel));
-          } catch (_) {
-            // Fallback to UrlSource using the assets/ path
-            await _audioPlayer.play(UrlSource(soundUrl));
-          }
-        } else {
-          // Unknown format; try as URL
-          await _audioPlayer.play(UrlSource(soundUrl));
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No sound available for this question.')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to play sound: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoadingSound = false);
-    }
-  }
-
-  Future<void> _stopAudio() async {
-    try {
-      await _audioPlayer.stop();
-    } catch (_) {}
-  }
-
-  void _showEnhancedDialog({
-    required String title,
-    required String message,
-    required bool isSuccess,
-    required VoidCallback onPressed,
-  }) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext ctx) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(25),
-          ),
-          backgroundColor: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors:
-                    isSuccess
-                        ? [Colors.green[50]!, Colors.green[100]!]
-                        : [Colors.orange[50]!, Colors.orange[100]!],
-              ),
-              borderRadius: BorderRadius.circular(25),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isSuccess ? Colors.green[400] : Colors.orange[400],
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isSuccess ? Icons.celebration : Icons.psychology,
-                    color: Colors.white,
-                    size: 40,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: isSuccess ? Colors.green[800] : Colors.orange[800],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  message,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    color: Colors.black87,
-                    height: 1.4,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors:
-                          isSuccess
-                              ? [Colors.green[400]!, Colors.green[600]!]
-                              : [Colors.orange[400]!, Colors.orange[600]!],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: (isSuccess ? Colors.green : Colors.orange)
-                            .withOpacity(0.4),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed: onPressed,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    child: Text(
-                      'Continue',
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }
