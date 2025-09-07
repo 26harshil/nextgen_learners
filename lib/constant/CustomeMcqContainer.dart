@@ -672,8 +672,8 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
             child: ShaderMask(
               shaderCallback:
                   (bounds) => LinearGradient(
-                    colors: [Colors.white, Colors.white.withOpacity(0.8)],
-                  ).createShader(bounds),
+                colors: [Colors.white, Colors.white.withOpacity(0.8)],
+              ).createShader(bounds),
               child: Text(
                 widget.quizTitle,
                 overflow: TextOverflow.ellipsis,
