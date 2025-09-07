@@ -11,7 +11,7 @@ class QuizScreen extends StatelessWidget {
 
   const QuizScreen({super.key, required this.quizId});
 
-  Widget _gradientScaffold({required Widget child}) {
+    Widget _gradientScaffold({required Widget child}) {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -33,6 +33,7 @@ class QuizScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final apiUrl = ApiConfig.quizUrl(quizId);
     debugPrint('Quiz API URL: $apiUrl');
+    debugPrint(':::Badge Image URL::: assets/badges/$quizId.png');
 
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: QuizService.fetchQuiz(apiUrl),
