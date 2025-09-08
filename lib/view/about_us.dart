@@ -298,7 +298,7 @@ class AboutUsPage extends StatelessWidget {
                                 icon: Icons.phone,
                                 label: 'Call',
                                 color: Colors.green[600]!,
-                                onTap: () => _makePhoneCall('+91 7016978474'),
+                                onTap: () => _makePhoneCall('+91 7016978473'),
                               ),
                             ],
                           ),
