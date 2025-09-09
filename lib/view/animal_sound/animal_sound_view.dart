@@ -128,7 +128,20 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
   void playSound(String soundPath) async {
     try {
       _bounceController.forward().then((_) => _bounceController.reverse());
-      await _audioPlayer.play(AssetSource(soundPath));
+      final sp = soundPath.trim();
+      if (sp.startsWith('http')) {
+        await _audioPlayer.play(UrlSource(sp));
+      } else {
+        String normalized = sp;
+        if (!normalized.startsWith('assets/')) {
+          if (normalized.startsWith('sounds/')) {
+            normalized = 'assets/' + normalized;
+          } else {
+            normalized = 'assets/sounds/' + normalized;
+          }
+        }
+        await _audioPlayer.play(AssetSource(normalized.replaceFirst('assets/', '')));
+      }
     } catch (e) {
       _showEnhancedAlert(
         title: 'Oops! 😺',
@@ -149,7 +162,6 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
         _saveProgress();
         _confettiController.forward().then((_) => _confettiController.reset());
       }
-      // Show quiz completion dialog only after the last question
       if (currentQuestionIndex == widget.questions.length - 1) {
         _showQuizComplete();
       }
@@ -169,7 +181,6 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
       _saveProgress();
     } else {
       await _markCompleted();
-      // Quiz complete, navigate to DashboardScreen
       Get.off(() => Dashboard(totalPoints: points));
     }
   }

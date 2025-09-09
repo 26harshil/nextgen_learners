@@ -75,68 +75,87 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment.center,
-            radius: 1.5,
-            colors: [
-              Colors.purple[100]!,
-              Colors.pink[100]!,
-              Colors.cyan[50]!,
-              Colors.purple[50]!,
-            ],
-          ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Animated mascot with rotating stars
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Main mascot image with scale animation
-                  ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.purple.withOpacity(0.3),
-                            blurRadius: 15,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Image.asset(
-                        'assets/home_screen/buddy.png',
-                        height: 150,
-                        width: 150,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                  // Rotating stars around mascot
-                  ...List.generate(6, (index) => _buildRotatingStar(index)),
+      body: Stack(
+        children: [
+          // Background gradient and main content
+          Container(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.center,
+                radius: 1.5,
+                colors: [
+                  Colors.purple[100]!,
+                  Colors.pink[100]!,
+                  Colors.cyan[50]!,
+                  Colors.purple[50]!,
                 ],
               ),
-              const SizedBox(height: 30),
-              // Five bouncing emojis
-              Row(
+            ),
+            child: Center(
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildBouncingEmoji('🎯', 0),
-                  _buildBouncingEmoji('🚀', 200),
-                  _buildBouncingEmoji('⭐', 400),
-                  _buildBouncingEmoji('🎨', 600),
-                  _buildBouncingEmoji('🎪', 800),
+                  // Animated mascot with rotating stars
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Main mascot image with scale animation
+                      ScaleTransition(
+                        scale: _scaleAnimation,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.purple.withOpacity(0.3),
+                                blurRadius: 15,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Image.asset(
+                            'assets/home_screen/buddy.png',
+                            height: 150,
+                            width: 150,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                      // Rotating stars around mascot
+                      ...List.generate(6, (index) => _buildRotatingStar(index)),
+                    ],
+                  ),
+                  const SizedBox(height: 30),
+                  // Five bouncing emojis
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildBouncingEmoji('🎯', 0),
+                      _buildBouncingEmoji('🚀', 200),
+                      _buildBouncingEmoji('⭐', 400),
+                      _buildBouncingEmoji('🎨', 600),
+                      _buildBouncingEmoji('🎪', 800),
+                    ],
+                  ),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
+          // DU logo at top-left
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Image.asset(
+                  'assets/home_screen/du_logo.png',
+                  height: 36,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,380 +1,254 @@
-import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:nextgen_learners/constant/import_export.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class AboutUsPage extends StatelessWidget {
-  const AboutUsPage({super.key});
+  const AboutUsPage({Key? key}) : super(key: key);
 
-  // Add these methods for launching URLs
-  Future<void> _launchURL(String url) async {
-    final Uri uri = Uri.parse(url);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      throw 'Could not launch $url';
+  Future<void> _shareApp() async {
+    const String message = 'Check out NextGen Learners – a fun and interactive learning app for kids! 🎮📚\n\nDownload now: https://play.google.com/store/apps/details?id=com.nextgen.learners';
+    await Share.share(message);
+  }
+
+  Future<void> _rateApp() async {
+    const String packageName = 'com.nextgen.learners';
+    final Uri playStoreUri = Uri.parse('market://details?id=$packageName');
+    final Uri webPlayStoreUri = Uri.parse('https://play.google.com/store/apps/details?id=$packageName');
+
+    try {
+      bool canLaunch = await canLaunchUrl(playStoreUri);
+      if (canLaunch) {
+        await launchUrl(playStoreUri, mode: LaunchMode.externalApplication);
+      } else {
+        await launchUrl(webPlayStoreUri, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      Get.snackbar(
+        '⚠️ Oops!',
+        'Could not open Play Store. Please try again later.',
+        backgroundColor: Colors.red.shade400,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(20),
+        borderRadius: 15,
+      );
     }
   }
 
-  Future<void> _makePhoneCall(String phoneNumber) async {
-    final Uri launchUri = Uri(
-      scheme: 'tel',
-      path: phoneNumber,
+  Future<void> _showMoreApps() async {
+    const String developerLink = 'https://play.google.com/store/apps/dev?id=7093579953062919700';
+    await launchUrl(
+      Uri.parse(developerLink),
+      mode: LaunchMode.externalApplication,
     );
-    await launchUrl(launchUri);
+  }
+
+  Future<void> _checkUpdates() async {
+    const String packageName = 'com.nextgen.learners';
+    final Uri playStoreUri = Uri.parse('market://details?id=$packageName');
+    await launchUrl(playStoreUri, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _openSocialMedia(String url) async {
+    await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'About Us',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.purple[400]!.withOpacity(0.9),
-                Colors.cyan[300]!.withOpacity(0.9),
-              ],
-            ),
-          ),
-        ),
-      ),
-      body: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.purple[50]!,
-              Colors.white,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // App Logo
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Image.asset(
-                      'assets/home_screen/buddy.png',
-                      height: 80,
-                      fit: BoxFit.contain,
-                    ),
+      backgroundColor: Colors.purple.shade50,
+      body: CustomScrollView(
+        slivers: [
+          // Colorful App Bar
+          SliverAppBar(
+            expandedHeight: 300,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.purple.shade500,
+                      Colors.pink.shade400,
+                      Colors.orange.shade400,
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  
-                  // App Name
-                  Text(
-                    'NextGen Learners',
-                    style: GoogleFonts.poppins(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.purple[800],
+                ),
+                child: Stack(
+                  children: [
+                    // Decorative circles
+                    Positioned(
+                      top: -50,
+                      right: -50,
+                      child: Container(
+                        width: 200,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.1),
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  
-                  // App Description
-                  Text(
-                    'Empowering Young Minds Through Play',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontStyle: FontStyle.italic,
-                      color: Colors.purple[600],
+                    Positioned(
+                      bottom: -30,
+                      left: -30,
+                      child: Container(
+                        width: 150,
+                        height: 150,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.1),
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Company/Organization Logo
-                  Container(
-                    height: 100,
-                    width: 200,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey[300]!),
-                    ),
-                    child: Center(
+                    // Content
+                    SafeArea(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.image, size: 40, color: Colors.grey[400]),
-                          Text(
-                            'Company Logo',
-                            style: TextStyle(
-                              color: Colors.grey[400],
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  // About Description
-                  Card(
-                    elevation: 3,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.info_outline, color: Colors.purple[600]),
-                              const SizedBox(width: 8),
-                              Text(
-                                'About the App',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.purple[700],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'A playful and engaging learning app for kids! Explore quizzes across animals, colors, fruits, math, and more — complete challenges, earn badges, and learn with fun facts, hints, and sounds.',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              height: 1.5,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Features
-                  Card(
-                    elevation: 3,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.star, color: Colors.amber[700]),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Features',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.purple[700],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          _featureItem(Icons.quiz, 'Interactive MCQ quizzes'),
-                          _featureItem(Icons.image, 'Beautiful visuals and sounds'),
-                          _featureItem(Icons.lightbulb, 'Hints and fun facts'),
-                          _featureItem(Icons.emoji_events, 'Badges and achievements'),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Team Section
-                  Card(
-                    elevation: 3,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.group, color: Colors.purple[600]),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Our Team',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.purple[700],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          
-                          // Developer
-                          _teamMember(
-                            icon: Icons.code,
-                            title: 'Developer',
-                            name: 'Harshil Solanki',
-                            color: Colors.blue[600]!,
-                          ),
-                          const SizedBox(height: 12),
-                          
-                          // Mentor
-                          _teamMember(
-                            icon: Icons.school,
-                            title: 'Mentor',
-                            name: 'Mehul Bhundiya',
-                            color: Colors.green[600]!,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Contact Section
-                  Card(
-                    elevation: 3,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.contact_mail, color: Colors.purple[600]),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Connect With Us',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.purple[700],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          
-                          // Social Media Links
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              _socialButton(
-                                icon: FontAwesomeIcons.linkedin,
-                                label: 'LinkedIn',
-                                color: const Color(0xFF0077B5),
-                                onTap: () => _launchURL('https://www.linkedin.com/in/harshil-solanki-020378288/'),
-                              ),
-                              _socialButton(
-                                icon: Icons.camera_alt,
-                                label: 'Instagram',
-                                color: const Color(0xFFE4405F),
-                                onTap: () => _launchURL('https://www.instagram.com/yourprofile'),
-                              ),
-                              _socialButton(
-                                icon: Icons.phone,
-                                label: 'Call',
-                                color: Colors.green[600]!,
-                                onTap: () => _makePhoneCall('+91 7016978473'),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          
-                          // Contact Info
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.purple[50],
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.email, size: 18, color: Colors.purple[600]),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'harshilsolanki26102005@gmail.com',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    color: Colors.purple[700],
+                          const SizedBox(height: 60),
+                          // Animated Logo
+                          Hero(
+                            tag: 'app_logo',
+                            child: Container(
+                              width: 110,
+                              height: 110,
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 30,
+                                    offset: const Offset(0, 15),
                                   ),
+                                ],
+                              ),
+                              child: Image.asset(
+                                'assets/home_screen/buddy.png',
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            'NextGen Learners',
+                            style: TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 1,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 5),
                                 ),
                               ],
                             ),
                           ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.25),
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            child: FutureBuilder<PackageInfo>(
+                              future: PackageInfo.fromPlatform(),
+                              builder: (context, snapshot) {
+                                return Text(
+                                  snapshot.hasData 
+                                    ? 'Version ${snapshot.data!.version}' 
+                                    : 'Loading version...',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  // Footer
-                  Column(
-                    children: [
-                      Text(
-                        'Made with ❤️ to inspire little minds',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: Colors.purple[700],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Version 1.0.0',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                ],
+                  ],
+                ),
+              ),
+            ),
+            leading: Container(
+              margin: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.25),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+                onPressed: () => Get.back(),
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _featureItem(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: Colors.purple[400]),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: Colors.grey[700],
+          
+          // Content
+          SliverToBoxAdapter(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.purple.shade50,
+                    Colors.white,
+                  ],
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // Quick Actions with Colors
+                    _buildQuickActions(),
+                    const SizedBox(height: 28),
+                    
+                    // About Section
+                    _buildAboutSection(),
+                    const SizedBox(height: 28),
+                    
+                    // Features Grid
+                    _buildFeaturesSection(),
+                    const SizedBox(height: 28),
+                    
+                    // Team Section
+                    _buildTeamSection(),
+                    const SizedBox(height: 28),
+                    
+                    // Contact & Social Section
+                    _buildContactSection(),
+                    const SizedBox(height: 28),
+                    
+                    // Social Media Links
+                    _buildSocialMediaSection(),
+                    const SizedBox(height: 28),
+                    
+                    // Footer
+                    _buildFooter(),
+                  ],
+                ),
               ),
             ),
           ),
@@ -383,42 +257,66 @@ class AboutUsPage extends StatelessWidget {
     );
   }
 
-  Widget _teamMember({
-    required IconData icon,
-    required String title,
-    required String name,
-    required Color color,
-  }) {
+  Widget _buildQuickActions() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: color.withOpacity(0.2),
-            child: Icon(icon, color: color, size: 20),
+        gradient: LinearGradient(
+          colors: [
+            Colors.purple.shade100,
+            Colors.pink.shade100,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.purple.withOpacity(0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
             children: [
-              Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  color: Colors.grey[600],
+              Expanded(
+                child: _buildActionCard(
+                  icon: Icons.share_rounded,
+                  label: 'Share App',
+                  gradient: [Colors.blue.shade400, Colors.blue.shade600],
+                  onTap: _shareApp,
                 ),
               ),
-              Text(
-                name,
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[800],
+              const SizedBox(width: 14),
+              Expanded(
+                child: _buildActionCard(
+                  icon: Icons.star_rounded,
+                  label: 'Rate Us',
+                  gradient: [Colors.amber.shade400, Colors.orange.shade600],
+                  onTap: _rateApp,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionCard(
+                  icon: Icons.apps_rounded,
+                  label: 'More Apps',
+                  gradient: [Colors.green.shade400, Colors.teal.shade600],
+                  onTap: _showMoreApps,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: _buildActionCard(
+                  icon: Icons.system_update_rounded,
+                  label: 'Updates',
+                  gradient: [Colors.purple.shade400, Colors.deepPurple.shade600],
+                  onTap: _checkUpdates,
                 ),
               ),
             ],
@@ -428,36 +326,781 @@ class AboutUsPage extends StatelessWidget {
     );
   }
 
-  Widget _socialButton({
+  Widget _buildActionCard({
     required IconData icon,
     required String label,
-    required Color color,
+    required List<Color> gradient,
     required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
+          gradient: LinearGradient(colors: gradient),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: gradient.first.withOpacity(0.4),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 4),
+            Icon(icon, color: Colors.white, size: 32),
+            const SizedBox(height: 10),
             Text(
               label,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                color: color,
-                fontWeight: FontWeight.w500,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAboutSection() {
+    return Container(
+      padding: const EdgeInsets.all(26),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.purple.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.purple.shade400, Colors.pink.shade400],
+                  ),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Icon(Icons.info_outline_rounded, color: Colors.white, size: 26),
+              ),
+              const SizedBox(width: 14),
+              Text(
+                'About Us',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.purple.shade800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 22),
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.purple.shade50,
+                  Colors.pink.shade50,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Text(
+              'NextGen Learners is a vibrant and engaging learning platform designed to make education fun for kids! Through interactive quizzes, colorful animations, and rewarding achievements, we transform learning into an exciting adventure.',
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.7,
+                color: Colors.grey.shade800,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.amber.shade50,
+                  Colors.orange.shade50,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: Colors.orange.shade200,
+                width: 2,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.lightbulb, color: Colors.orange.shade600, size: 30),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Our Mission',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange.shade800,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Making learning fun, interactive, and rewarding for every child!',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade700,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeaturesSection() {
+    final features = [
+      {'icon': Icons.quiz, 'title': '8 Quizzes', 'color': Colors.blue},
+      {'icon': Icons.emoji_events, 'title': 'Achievements', 'color': Colors.amber},
+      {'icon': Icons.volume_up, 'title': 'Sounds', 'color': Colors.green},
+      {'icon': Icons.lightbulb, 'title': 'Hints', 'color': Colors.orange},
+      {'icon': Icons.bar_chart, 'title': 'Progress', 'color': Colors.purple},
+      {'icon': Icons.star, 'title': 'Rewards', 'color': Colors.pink},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(26),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.green.shade50, Colors.cyan.shade50],
+        ),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(
+          color: Colors.green.shade200,
+          width: 2,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.star_rounded, color: Colors.green.shade600, size: 28),
+              const SizedBox(width: 10),
+              Text(
+                'Key Features',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green.shade800,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Icon(Icons.star_rounded, color: Colors.green.shade600, size: 28),
+            ],
+          ),
+          const SizedBox(height: 22),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              mainAxisSpacing: 18,
+              crossAxisSpacing: 18,
+              childAspectRatio: 1,
+            ),
+            itemCount: features.length,
+            itemBuilder: (context, index) {
+              final feature = features[index];
+              return Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (feature['color'] as Color).withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      feature['icon'] as IconData,
+                      color: feature['color'] as Color,
+                      size: 32,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      feature['title'] as String,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTeamSection() {
+    return Container(
+      padding: const EdgeInsets.all(26),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade50, Colors.indigo.shade50],
+        ),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(
+          color: Colors.blue.shade200,
+          width: 2,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.people_alt_rounded, color: Colors.blue.shade600, size: 28),
+              const SizedBox(width: 10),
+              Text(
+                'Amazing Team',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _buildTeamCard(
+            emoji: '👨‍💻',
+            role: 'Developer',
+            name: 'Harshil Solanki',
+            description: 'App Development & Design',
+            color: Colors.purple,
+          ),
+          const SizedBox(height: 16),
+          _buildTeamCard(
+            emoji: '🎯',
+            role: 'Mentor',
+            name: 'Mehul Bhundiya',
+            description: 'Project Guidance',
+            color: Colors.blue,
+          ),
+          const SizedBox(height: 16),
+          _buildTeamCard(
+            emoji: '🎓',
+            role: 'Department',
+            name: 'School of Computer Science',
+            description: 'Academic Excellence',
+            color: Colors.green,
+          ),
+          const SizedBox(height: 16),
+          _buildTeamCard(
+            emoji: '🏛️',
+            role: 'Institution',
+            name: 'Darshan University',
+            description: 'Rajkot, Gujarat, India',
+            color: Colors.orange,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTeamCard({
+    required String emoji,
+    required String role,
+    required String name,
+    required String description,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 55,
+            height: 55,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [color.withOpacity(0.3), color.withOpacity(0.1)],
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(emoji, style: TextStyle(fontSize: 28)),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    role,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  name,
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContactSection() {
+    return Container(
+      padding: const EdgeInsets.all(26),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.red.shade50, Colors.pink.shade50],
+        ),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(
+          color: Colors.red.shade200,
+          width: 2,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.contact_support_rounded, color: Colors.red.shade600, size: 28),
+              const SizedBox(width: 10),
+              Text(
+                'Get In Touch',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red.shade800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _buildContactItem(
+            icon: Icons.email_rounded,
+            label: 'Email Us',
+            value: 'harshilsolanki26102005@gmail.com',
+            gradient: [Colors.blue.shade400, Colors.blue.shade600],
+            onTap: () => launchUrl(Uri.parse('mailto:harshilsolanki26102005@gmail.com')),
+          ),
+          const SizedBox(height: 16),
+          _buildContactItem(
+            icon: Icons.phone_rounded,
+            label: 'Call Us',
+            value: '+91 97277 47317',
+            gradient: [Colors.green.shade400, Colors.green.shade600],
+            onTap: () => launchUrl(Uri.parse('tel:+919727747317')),
+          ),
+          const SizedBox(height: 16),
+          _buildContactItem(
+            icon: Icons.language_rounded,
+            label: 'Website',
+            value: 'www.nextgen-learners.com',
+            gradient: [Colors.purple.shade400, Colors.purple.shade600],
+            onTap: () => launchUrl(Uri.parse('https://nextgen-learners.com')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContactItem({
+    required IconData icon,
+    required String label,
+    required String value,
+    required List<Color> gradient,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: gradient.first.withOpacity(0.2),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: gradient),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: Colors.white, size: 22),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 18,
+              color: gradient.first,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSocialMediaSection() {
+    return Container(
+      padding: const EdgeInsets.all(26),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.indigo.shade50, Colors.purple.shade50],
+        ),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(
+          color: Colors.indigo.shade200,
+          width: 2,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              FaIcon(FontAwesomeIcons.hashtag, color: Colors.indigo.shade600, size: 24),
+              const SizedBox(width: 10),
+              Text(
+                'Connect With Us',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.indigo.shade800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildSocialButton(
+                icon: FontAwesomeIcons.linkedin,
+                color: Colors.blue.shade700,
+                onTap: () => _openSocialMedia('https://www.linkedin.com/in/harshilsolanki'),
+              ),
+              _buildSocialButton(
+                icon: FontAwesomeIcons.instagram,
+                gradient: [Colors.purple, Colors.pink, Colors.orange],
+                onTap: () => _openSocialMedia('https://www.instagram.com/harshilsolanki'),
+              ),
+              _buildSocialButton(
+                icon: FontAwesomeIcons.twitter,
+                color: Colors.blue.shade400,
+                onTap: () => _openSocialMedia('https://twitter.com/harshilsolanki'),
+              ),
+              _buildSocialButton(
+                icon: FontAwesomeIcons.github,
+                color: Colors.grey.shade800,
+                onTap: () => _openSocialMedia('https://github.com/harshilsolanki'),
+              ),
+              _buildSocialButton(
+                icon: FontAwesomeIcons.facebook,
+                color: Colors.blue.shade600,
+                onTap: () => _openSocialMedia('https://facebook.com/harshilsolanki'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSocialButton({
+    required IconData icon,
+    Color? color,
+    List<Color>? gradient,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(15),
+      child: Container(
+        width: 55,
+        height: 55,
+        decoration: BoxDecoration(
+          color: gradient == null ? color : null,
+          gradient: gradient != null 
+            ? LinearGradient(
+                colors: gradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: (color ?? gradient!.first).withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Center(
+          child: FaIcon(
+            icon,
+            color: Colors.white,
+            size: 24,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFooter() {
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.purple.shade100,
+            Colors.pink.shade100,
+            Colors.orange.shade100,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.purple.withOpacity(0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.copyright, size: 18, color: Colors.grey.shade700),
+              const SizedBox(width: 6),
+              Text(
+                '${DateTime.now().year} NextGen Learners',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'All Rights Reserved',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Made with',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade700,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(Icons.favorite, color: Colors.red.shade500, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'in India',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade700,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text('🇮🇳', style: TextStyle(fontSize: 20)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection({
+    required bool isDarkMode,
+    IconData? icon,
+    String? title,
+    required Widget child,
+    EdgeInsets padding = const EdgeInsets.all(20),
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: padding,
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (icon != null && title != null) ...[
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isDarkMode
+                        ? Colors.purple.withOpacity(0.2)
+                        : Colors.purple.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: Colors.purple, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+          ],
+          child,
+        ],
       ),
     );
   }
