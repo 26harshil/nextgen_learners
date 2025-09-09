@@ -1,9 +1,15 @@
-import 'package:nextgen_learners/constant/import_export.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:nextgen_learners/constant/import_export.dart' hide AudioPlayer;
 
 class AnimalSoundView extends StatefulWidget {
   final List<Map<String, dynamic>> questions;
   final String quizId;
-  const AnimalSoundView({super.key, required this.questions, required this.quizId});
+
+  const AnimalSoundView({
+    super.key,
+    required this.questions,
+    required this.quizId,
+  });
 
   @override
   _AnimalSoundViewState createState() => _AnimalSoundViewState();
@@ -17,8 +23,8 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
   bool showFunFact = false;
   String? selectedAnswer;
   final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _isLoading = false;
 
-  // Enhanced animation controllers
   late AnimationController _bounceController;
   late AnimationController _slideController;
   late AnimationController _pulseController;
@@ -33,7 +39,12 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
   void initState() {
     super.initState();
     _initializeAnimations();
+    
     _loadProgress();
+    _audioPlayer.setLoopMode(LoopMode.off);
+    if (widget.questions.isNotEmpty) {
+      _playSound();
+    }
   }
 
   void _initializeAnimations() {
@@ -76,7 +87,6 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
       CurvedAnimation(parent: _confettiController, curve: Curves.easeOut),
     );
 
-    // Start initial animations
     _slideController.forward();
     _startPulseAnimation();
   }
@@ -91,10 +101,14 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     final savedPoints = prefs.getInt('points_${widget.quizId}') ?? 0;
     if (!mounted) return;
     setState(() {
-      final maxIndex = widget.questions.isEmpty ? 0 : (widget.questions.length - 1);
+      final maxIndex =
+          widget.questions.isEmpty ? 0 : (widget.questions.length - 1);
       currentQuestionIndex = savedIndex.clamp(0, maxIndex);
       points = savedPoints;
     });
+    if (widget.questions.isNotEmpty) {
+      _playSound();
+    }
   }
 
   Future<void> _saveProgress() async {
@@ -125,39 +139,82 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     super.dispose();
   }
 
-  void playSound(String soundPath) async {
+  Future<void> _playSound() async {
+    final soundPath =
+        widget.questions[currentQuestionIndex]['soundUrl']?.toString() ?? '';
+    if (soundPath.isNotEmpty) {
+      await playSound(soundPath);
+    }
+  }
+Future<void> playSound(String soundPath) async {
+  if (soundPath.isEmpty) {
+    _showEnhancedAlert(
+      title: 'No Sound',
+      message: 'No audio file available for this sound.',
+      icon: Icons.volume_off,
+      color: Colors.orange,
+    );
+    return;
+  }
+
+  try {
+    setState(() => _isLoading = true);
+    
+    // Stop any currently playing audio
+    await _audioPlayer.stop();
+    
+    // Handle different URL formats
+    String audioUrl = soundPath;
+    if (!audioUrl.startsWith('http')) {
+      // If it's just a filename, construct the full URL
+      audioUrl = 'https://nextgen-learners-backend.onrender.com/sounds/$audioUrl';
+    }
+    
+    print('Attempting to play audio from: $audioUrl');
+    
+    // Set the audio source with error handling
     try {
+      await _audioPlayer.setUrl(audioUrl, preload: true);
+      await _audioPlayer.play();
       _bounceController.forward().then((_) => _bounceController.reverse());
-      final sp = soundPath.trim();
-      if (sp.startsWith('http')) {
-        await _audioPlayer.play(UrlSource(sp));
-      } else {
-        String normalized = sp;
-        if (!normalized.startsWith('assets/')) {
-          if (normalized.startsWith('sounds/')) {
-            normalized = 'assets/' + normalized;
-          } else {
-            normalized = 'assets/sounds/' + normalized;
-          }
-        }
-        await _audioPlayer.play(AssetSource(normalized.replaceFirst('assets/', '')));
-      }
     } catch (e) {
+      // Retry once if it fails
+      print('First attempt failed, retrying... Error: $e');
+      await Future.delayed(const Duration(seconds: 1));
+      await _audioPlayer.setUrl(audioUrl);
+      await _audioPlayer.play();
+    }
+    
+  } catch (e) {
+    print('Error playing sound: $e');
+    if (mounted) {
       _showEnhancedAlert(
-        title: 'Oops! 😺',
-        message: 'Error playing sound. Try again!',
+        title: 'Playback Error',
+        message: 'Could not play the sound. Please try again.',
         icon: Icons.error_outline,
         color: Colors.red,
       );
     }
+  } finally {
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
+}
 
   void selectAnswer(String answer) {
     setState(() {
       selectedAnswer = answer;
       showFunFact = true;
-      final correct = (widget.questions[currentQuestionIndex]['answer'] as String?) ?? '';
-      if (answer == correct) {
+      final options =
+          widget.questions[currentQuestionIndex]['options'] as List<dynamic>? ??
+          [];
+      final correctOption = options.firstWhere(
+        (opt) => opt['isCorrect'] == true,
+        orElse: () => {'optionText': ''},
+      );
+      final correctAnswer = correctOption['optionText']?.toString() ?? '';
+      if (answer == correctAnswer) {
         points += 10;
         _saveProgress();
         _confettiController.forward().then((_) => _confettiController.reset());
@@ -179,16 +236,23 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
         _slideController.forward();
       });
       _saveProgress();
+      await _playSound();
     } else {
       await _markCompleted();
       Get.off(() => Dashboard(totalPoints: points));
     }
   }
 
+  void toggleHint() {
+    setState(() {
+      showHint = !showHint;
+    });
+  }
+
   void _showQuizComplete() {
     final percentage = (points / (widget.questions.length * 10)) * 100;
-    String message = '';
-    String emoji = '';
+    String message;
+    String emoji;
 
     if (percentage >= 80) {
       message = 'Amazing! You\'re an animal sound expert! 🌟';
@@ -211,24 +275,6 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     );
   }
 
-  void _resetQuiz() {
-    setState(() {
-      currentQuestionIndex = 0;
-      points = 0;
-      showHint = false;
-      showFunFact = false;
-      selectedAnswer = null;
-    });
-    _slideController.reset();
-    _slideController.forward();
-  }
-
-  void toggleHint() {
-    setState(() {
-      showHint = !showHint;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     if (widget.questions.isEmpty) {
@@ -240,7 +286,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     final currentQuestion = widget.questions[currentQuestionIndex];
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 600;
-    final currentColor = (currentQuestion['color'] as Color?) ?? Colors.blue;
+    final currentColor = Colors.blue;
 
     return Theme(
       data: _buildTheme(currentColor, isSmallScreen),
@@ -260,7 +306,15 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
                   isSmallScreen,
                   currentColor,
                 ),
-                if (showFunFact && selectedAnswer == (currentQuestion['answer'] as String? ?? ''))
+                if (showFunFact &&
+                    selectedAnswer ==
+                        (widget.questions[currentQuestionIndex]['options']
+                                ?.firstWhere(
+                                  (opt) => opt['isCorrect'] == true,
+                                  orElse: () => {'optionText': ''},
+                                )['optionText']
+                                ?.toString() ??
+                            ''))
                   _buildConfettiOverlay(),
               ],
             ),
@@ -344,7 +398,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
                 ),
               ),
               Text(
-                '${(widget.questions.isEmpty ? 0 : currentQuestionIndex + 1)}/${widget.questions.isEmpty ? 0 : widget.questions.length}',
+                '${widget.questions.isEmpty ? 0 : currentQuestionIndex + 1}/${widget.questions.length}',
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   fontWeight: FontWeight.w400,
@@ -450,18 +504,17 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
           child: Column(
             children: [
               _buildEnhancedProgressBar(isSmallScreen, currentColor),
-              SizedBox(height: isSmallScreen ? 15 : 20),
-              SizedBox(height: isSmallScreen ? 20 : 40),
+              const SizedBox(height: 20),
               _buildEnhancedSoundButton(
                 currentQuestion,
                 isSmallScreen,
                 currentColor,
               ),
-              SizedBox(height: isSmallScreen ? 24 : 30),
+              const SizedBox(height: 30),
               _buildAnimatedTitle(context),
-              SizedBox(height: isSmallScreen ? 16 : 20),
+              const SizedBox(height: 20),
               _buildEnhancedPointsDisplay(context, isSmallScreen, currentColor),
-              SizedBox(height: isSmallScreen ? 30 : 40),
+              const SizedBox(height: 40),
               _buildQuestionCard(
                 context,
                 currentQuestion,
@@ -469,29 +522,28 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
                 isSmallScreen,
                 currentColor,
               ),
-              SizedBox(height: isSmallScreen ? 15 : 20),
+              const SizedBox(height: 20),
               _buildAnimatedHint(
                 context,
                 currentQuestion,
                 screenWidth,
                 isSmallScreen,
               ),
-              SizedBox(height: isSmallScreen ? 25 : 30),
+              const SizedBox(height: 30),
               _buildEnhancedAnswerGrid(
                 context,
                 currentQuestion,
                 isSmallScreen,
                 currentColor,
               ),
-              SizedBox(height: isSmallScreen ? 20 : 25),
+              const SizedBox(height: 25),
               _buildAnimatedFunFact(
                 context,
                 currentQuestion,
                 screenWidth,
                 isSmallScreen,
               ),
-              SizedBox(height: isSmallScreen ? 30 : 40),
-
+              const SizedBox(height: 40),
               _buildActionButtonsRow(
                 context,
                 currentQuestion,
@@ -512,16 +564,16 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
   ) {
     return GestureDetector(
       onTap: () {
-        final sp = currentQuestion['sound'] as String?;
-        if (sp == null || sp.isEmpty) {
+        final soundUrl = currentQuestion['soundUrl']?.toString();
+        if (soundUrl == null || soundUrl.isEmpty) {
           _showEnhancedAlert(
-            title: 'No sound',
+            title: 'No Sound',
             message: 'Sound unavailable for this question.',
             icon: Icons.volume_off,
             color: Colors.red,
           );
         } else {
-          playSound(sp);
+          _playSound();
         }
       },
       child: AnimatedBuilder(
@@ -557,11 +609,15 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  Icon(
-                    Icons.volume_up,
-                    size: isSmallScreen ? 50 : 60,
-                    color: Colors.white,
-                  ),
+                  _isLoading
+                      ? const CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      )
+                      : Icon(
+                        Icons.volume_up,
+                        size: isSmallScreen ? 50 : 60,
+                        color: Colors.white,
+                      ),
                 ],
               ),
             ),
@@ -700,7 +756,8 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
       child: Column(
         children: [
           Text(
-            (currentQuestion['question'] as String? ?? 'Which animal makes this sound?'),
+            currentQuestion['questionText']?.toString() ??
+                'Which animal makes this sound?',
             style: Theme.of(context).textTheme.bodyLarge,
             textAlign: TextAlign.center,
           ),
@@ -748,7 +805,8 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          (currentQuestion['hint'] as String? ?? 'Listen carefully for clues.'),
+                          currentQuestion['hint']?.toString() ??
+                              'Listen carefully for clues.',
                           style: Theme.of(
                             context,
                           ).textTheme.bodyMedium?.copyWith(
@@ -771,6 +829,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     bool isSmallScreen,
     Color currentColor,
   ) {
+    final options = (currentQuestion['options'] as List<dynamic>?) ?? [];
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -780,14 +839,18 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
         mainAxisSpacing: isSmallScreen ? 16 : 20,
         childAspectRatio: isSmallScreen ? 1.8 : 2.2,
       ),
-      itemCount: ((currentQuestion['options'] as List?) ?? const []).length,
+      itemCount: options.length,
       itemBuilder: (context, index) {
-        final opts = (currentQuestion['options'] as List?) ?? const [];
-        final answer = opts[index].toString();
+        final answer = options[index]['optionText']?.toString() ?? '';
+        final correctOption = options.firstWhere(
+          (opt) => opt['isCorrect'] == true,
+          orElse: () => {'optionText': ''},
+        );
+        final correctAnswer = correctOption['optionText']?.toString() ?? '';
         return _buildEnhancedAnswerButton(
           context,
           answer,
-          (currentQuestion['answer'] as String?) ?? '',
+          correctAnswer,
           isSmallScreen,
           currentColor,
           index,
@@ -829,12 +892,10 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
           scale: value,
           child: GestureDetector(
             onTap:
-                showFunFact
+                showResult
                     ? null
                     : () {
-                      setState(() {
-                        selectedAnswer = answer;
-                      });
+                      selectAnswer(answer);
                     },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
@@ -918,7 +979,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          (currentQuestion['funFact'] as String? ?? ''),
+                          currentQuestion['funFact']?.toString() ?? '',
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(color: Colors.blue[900], height: 1.4),
                         ),
@@ -948,7 +1009,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
                 ),
               ),
               Text(
-                '${(widget.questions.isEmpty ? 0 : currentQuestionIndex + 1)}/${widget.questions.isEmpty ? 0 : widget.questions.length}',
+                '${widget.questions.isEmpty ? 0 : currentQuestionIndex + 1}/${widget.questions.length}',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -967,7 +1028,10 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
             child: ClipRRect(
               borderRadius: BorderRadius.circular(6),
               child: LinearProgressIndicator(
-                value: widget.questions.isEmpty ? 0 : (currentQuestionIndex + 1) / widget.questions.length,
+                value:
+                    widget.questions.isEmpty
+                        ? 0
+                        : (currentQuestionIndex + 1) / widget.questions.length,
                 backgroundColor: Colors.transparent,
                 valueColor: AlwaysStoppedAnimation<Color>(currentColor),
                 minHeight: 12,
@@ -1185,7 +1249,6 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
   }
 }
 
-// Custom painter for floating shapes background
 class FloatingShapesPainter extends CustomPainter {
   final double animation;
   final Color color;
@@ -1199,7 +1262,6 @@ class FloatingShapesPainter extends CustomPainter {
           ..color = color.withOpacity(0.05)
           ..style = PaintingStyle.fill;
 
-    // Draw floating circles
     for (int i = 0; i < 8; i++) {
       final x = (size.width * 0.1) + (i * size.width * 0.15);
       final y =
@@ -1212,7 +1274,6 @@ class FloatingShapesPainter extends CustomPainter {
       );
     }
 
-    // Draw floating triangles
     for (int i = 0; i < 5; i++) {
       final x = size.width * 0.8;
       final y =
@@ -1234,7 +1295,6 @@ class FloatingShapesPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-// Custom painter for confetti effect
 class ConfettiPainter extends CustomPainter {
   final double animation;
 

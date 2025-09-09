@@ -1,24 +1,22 @@
-import 'package:flutter/foundation.dart';
-import 'dart:typed_data';
-import 'dart:convert';
+import 'package:flutter/foundation.dart' show kDebugMode;
 
 class Quiz {
+  final int questionId;
   final String questionText;
-  final String imageUrl;
-  final String hint;
-  final String funFact;
+  final String? imageUrl;
+  final String? soundUrl;
+  final String? hint;
+  final String? funFact;
   final List<Option> options;
-  final String soundUrl; // optional fallback if bytes not present
-  final Uint8List? soundDataBytes; // decoded from base64 JSON
 
   Quiz({
+    required this.questionId,
     required this.questionText,
-    required this.imageUrl,
-    required this.hint,
-    required this.funFact,
+    this.imageUrl,
+    this.soundUrl,
+    this.hint,
+    this.funFact,
     required this.options,
-    this.soundUrl = '',
-    this.soundDataBytes,
   });
 
   factory Quiz.fromJson(Map<String, dynamic> json) {
@@ -28,88 +26,77 @@ class Quiz {
               .map((e) => Option.fromJson(e as Map<String, dynamic>))
               .toList();
 
-      // Fallbacks for different backends/fields
-      final String soundUrl =
-          json['soundUrl']?.toString() ?? json['sound']?.toString() ?? '';
-      final String? soundBase64 = (json['soundData'] ?? json['sound_data'] ?? json['soundBase64'])?.toString();
-      Uint8List? soundBytes;
-      if (soundBase64 != null && soundBase64.isNotEmpty) {
-        try {
-          soundBytes = base64.decode(soundBase64);
-        } catch (_) {
-          soundBytes = null;
-        }
-      }
       return Quiz(
-        questionText:
-            json['questionText']?.toString() ??
-            json['question']?.toString() ?? // fallback keys
-            '',
-        imageUrl:
-            json['imageUrl']?.toString() ?? json['image']?.toString() ?? '',
-        hint: json['hint']?.toString() ?? '',
-        funFact: json['funFact']?.toString() ?? json['info']?.toString() ?? '',
+        questionId: json['questionId']?.toInt() ?? 0,
+        questionText: json['questionText']?.toString() ?? '',
+        imageUrl: json['imageUrl']?.toString(),
+        soundUrl: json['soundUrl']?.toString(),
+        hint: json['hint']?.toString(),
+        funFact: json['funFact']?.toString(),
         options: opts,
-        soundUrl: soundUrl,
-        soundDataBytes: soundBytes,
       );
     } catch (e, st) {
       if (kDebugMode) {
-        debugPrint('Quiz.fromJson failed for item: $json');
-        debugPrint('$e\n$st');
+        print('Quiz.fromJson failed for item: $json');
+        print('$e\n$st');
       }
-      // return a safe empty quiz rather than throwing
       return Quiz(
+        questionId: 0,
         questionText: '',
-        imageUrl: '',
-        hint: '',
-        funFact: '',
+        imageUrl: null,
+        soundUrl: null,
+        hint: null,
+        funFact: null,
         options: [],
-        soundUrl: '',
-        soundDataBytes: null,
       );
     }
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'questionId': questionId,
       'questionText': questionText,
       'imageUrl': imageUrl,
+      'soundUrl': soundUrl,
       'hint': hint,
       'funFact': funFact,
       'options': options.map((option) => option.toJson()).toList(),
-      'soundUrl': soundUrl,
-      'soundDataBytes': soundDataBytes,
     };
   }
 }
 
 class Option {
+  final int optionId;
   final String optionText;
   final bool isCorrect;
 
-  Option({required this.optionText, required this.isCorrect});
+  Option({
+    required this.optionId,
+    required this.optionText,
+    required this.isCorrect,
+  });
 
   factory Option.fromJson(Map<String, dynamic> json) {
     try {
       return Option(
-        optionText:
-            json['optionText']?.toString() ??
-            json['text']?.toString() ?? // fallback key
-            '',
-        isCorrect:
-            (json['isCorrect'] == true) || (json['correct'] == true) || false,
+        optionId: json['optionId']?.toInt() ?? 0,
+        optionText: json['optionText']?.toString() ?? '',
+        isCorrect: json['isCorrect'] == true,
       );
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('Option.fromJson failed for item: $json');
-        debugPrint('$e');
+        print('Option.fromJson failed for item: $json');
+        print('$e');
       }
-      return Option(optionText: '', isCorrect: false);
+      return Option(optionId: 0, optionText: '', isCorrect: false);
     }
   }
 
   Map<String, dynamic> toJson() {
-    return {'optionText': optionText, 'isCorrect': isCorrect};
+    return {
+      'optionId': optionId,
+      'optionText': optionText,
+      'isCorrect': isCorrect,
+    };
   }
 }

@@ -10,7 +10,7 @@ class DashboardController extends GetxController {
   var animalName = <Map<String, dynamic>>[].obs;
     var birds = <Map<String, dynamic>>[].obs;
   var isLoading = true.obs; // Track loading state
-
+  var sounds = <Map<String, dynamic>>[].obs;
   final ApiService _apiService = ApiService();
 
   @override
@@ -26,9 +26,10 @@ class DashboardController extends GetxController {
       _apiService.fetchQuiz('fruits', fruits),
       _apiService.fetchQuiz('math', math),
       _apiService.fetchQuiz('vegetables', vegetables),
-      _apiService.fetchQuiz('vehicals', vehicleName),
+      _apiService.fetchQuiz('vehicles', vehicleName),
       _apiService.fetchQuiz('animalname', animalName),
       _apiService.fetchQuiz('birds', birds),
+      _apiService.fetchQuiz('sounds', sounds),
     ]);
     isLoading.value = false;
     printAllQuizzes();
@@ -43,6 +44,7 @@ class DashboardController extends GetxController {
     print('Vehicles Quiz: $vehicleName');
     print('Animals Quiz: $animalName');
     print('Birds Quiz: $birds');
+     print('Birds Quiz: $sounds');
     print('---------------------');
   }
 }

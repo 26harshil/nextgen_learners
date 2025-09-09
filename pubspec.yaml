@@ -23,12 +23,20 @@ dependencies:
   font_awesome_flutter: ^10.1.0
   share_plus: ^11.1.0
   package_info_plus: 
+  just_audio: ^0.9.37
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
   flutter_launcher_icons: 
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/home_screen/buddy.png"
+  adaptive_icon_background: "#FF9800"
+  adaptive_icon_foreground: "assets/home_screen/android/androidLogo.png"
 
 flutter:
   uses-material-design: true

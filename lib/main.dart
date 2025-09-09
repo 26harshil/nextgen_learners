@@ -60,11 +60,13 @@ class MyApp extends StatelessWidget {
         ),
         GetPage(
           name: ANIMAL_SOUND_SCREEN,
-          page:
-              () => AnimalSoundView(
-                questions: Animal_sound_questions,
-                quizId: 'animalsound',
-              ),
+          page: () {
+            final controller = Get.find<DashboardController>();
+            return AnimalSoundView(
+              questions: controller.sounds,
+              quizId: 'sounds',
+            );
+          },
         ),
         GetPage(
           name: BIRDS_SCREEN,

@@ -27,7 +27,7 @@ const String BIRDS_SCREEN = '/birds';
 const String VEGETABLES_SCREEN = '/vegetables';
 const String VEHICLE_NAME_SCREEN = '/vehicals';
 const String ANIMAL_Name_SCREEN = '/animalname';
-const String ANIMAL_SOUND_SCREEN = '/animalsound';
+const String ANIMAL_SOUND_SCREEN = '/sounds';
 const String DASHBOARD_SCREEN = '/dashboard';
 const String SPLASH_SCREEN = '/splash_screen';
 

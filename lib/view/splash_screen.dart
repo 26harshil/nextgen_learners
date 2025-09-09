@@ -43,17 +43,7 @@ class _SplashScreenState extends State<SplashScreen>
     // Create animations
     _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
-    );
-
-    // _rotationAnimation = Tween<double>(begin: 0.0, end: 2 * math.pi).animate(
-    //   CurvedAnimation(parent: _rotationController, curve: Curves.linear),
-    // );
-
-    // _bounceAnimation = Tween<double>(begin: 0.0, end: 20.0).animate(
-    //   CurvedAnimation(parent: _bounceController, curve: Curves.bounceInOut),
-    // );
-
-    // Start animations
+    );    // Start animations
     _scaleController.forward();
     _rotationController.repeat();
     _bounceController.repeat(reverse: true);
