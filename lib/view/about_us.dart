@@ -767,7 +767,7 @@ class AboutUsPage extends StatelessWidget {
             label: 'Call Us',
             value: '+91 97277 47317',
             gradient: [Colors.green.shade400, Colors.green.shade600],
-            onTap: () => launchUrl(Uri.parse('tel:+919727747317')),
+            onTap: () => launchUrl(Uri.parse('tel:+917016978473')),
           ),
           const SizedBox(height: 16),
           _buildContactItem(
@@ -888,27 +888,22 @@ class AboutUsPage extends StatelessWidget {
               _buildSocialButton(
                 icon: FontAwesomeIcons.linkedin,
                 color: Colors.blue.shade700,
-                onTap: () => _openSocialMedia('https://www.linkedin.com/in/harshilsolanki'),
+                onTap: () => _openSocialMedia('https://www.linkedin.com/in/harshil-solanki-020378288/'),
               ),
               _buildSocialButton(
                 icon: FontAwesomeIcons.instagram,
                 gradient: [Colors.purple, Colors.pink, Colors.orange],
-                onTap: () => _openSocialMedia('https://www.instagram.com/harshilsolanki'),
+                onTap: () => _openSocialMedia('https://www.instagram.com/harshil_2677/?next=%2F'),
               ),
               _buildSocialButton(
                 icon: FontAwesomeIcons.twitter,
                 color: Colors.blue.shade400,
-                onTap: () => _openSocialMedia('https://twitter.com/harshilsolanki'),
+                onTap: () => _openSocialMedia('https://x.com/?lang=en-in'),
               ),
               _buildSocialButton(
                 icon: FontAwesomeIcons.github,
                 color: Colors.grey.shade800,
-                onTap: () => _openSocialMedia('https://github.com/harshilsolanki'),
-              ),
-              _buildSocialButton(
-                icon: FontAwesomeIcons.facebook,
-                color: Colors.blue.shade600,
-                onTap: () => _openSocialMedia('https://facebook.com/harshilsolanki'),
+                onTap: () => _openSocialMedia('https://github.com/26harshil'),
               ),
             ],
           ),
