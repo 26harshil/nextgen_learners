@@ -29,22 +29,22 @@ class _AchievementsPageState extends State<AchievementsPage>
   ];
 
   final List<Map<String, dynamic>> _allBadges = [
-    {'id': 'First_Step', 'name': 'First Step', 'desc': 'Complete your first quiz', 'icon': Icons.flag, 'color': Colors.green},
-    {'id': 'Quick_Learner', 'name': 'Quick Learner', 'desc': 'Score 100% in any quiz', 'icon': Icons.bolt, 'color': Colors.orange},
-    {'id': 'Explorer', 'name': 'Explorer', 'desc': 'Try 3 different categories', 'icon': Icons.explore, 'color': Colors.blue},
-    {'id': 'Half_Way', 'name': 'Half Way Hero', 'desc': 'Complete 4 quizzes', 'icon': Icons.trending_up, 'color': Colors.purple},
-    {'id': 'Perfect_Score', 'name': 'Perfect Score', 'desc': 'Get 2 perfect scores', 'icon': Icons.star, 'color': Colors.amber},
-    {'id': 'Almost_There', 'name': 'Almost There', 'desc': 'Complete 6 quizzes', 'icon': Icons.emoji_events, 'color': Colors.indigo},
-    {'id': 'Quiz_Master', 'name': 'Quiz Master', 'desc': 'Complete all 8 quizzes', 'icon': Icons.military_tech, 'color': Colors.red},
-    {'id': 'Champion', 'name': 'Champion', 'desc': 'Average score above 80%', 'icon': Icons.workspace_premium, 'color': Colors.teal},
+    {'id': 'First_Step', 'name': 'First Step', 'desc': 'First quiz done', 'icon': Icons.flag, 'color': Colors.green},
+    {'id': 'Quick_Learner', 'name': 'Quick Learn', 'desc': 'Score 100%', 'icon': Icons.bolt, 'color': Colors.orange},
+    {'id': 'Explorer', 'name': 'Explorer', 'desc': '3 categories', 'icon': Icons.explore, 'color': Colors.blue},
+    {'id': 'Half_Way', 'name': 'Half Way', 'desc': '4 quizzes', 'icon': Icons.trending_up, 'color': Colors.purple},
+    {'id': 'Perfect_Score', 'name': 'Perfect', 'desc': '2 perfect', 'icon': Icons.star, 'color': Colors.amber},
+    {'id': 'Almost_There', 'name': 'Almost', 'desc': '6 quizzes', 'icon': Icons.emoji_events, 'color': Colors.indigo},
+    {'id': 'Quiz_Master', 'name': 'Master', 'desc': 'All 8 done', 'icon': Icons.military_tech, 'color': Colors.red},
+    {'id': 'Champion', 'name': 'Champion', 'desc': 'Avg > 80%', 'icon': Icons.workspace_premium, 'color': Colors.teal},
   ];
 
   final List<Map<String, dynamic>> _milestones = [
     {'title': 'First Quiz', 'reward': '🌟', 'completed': false, 'required': 1},
     {'title': '2 Quizzes', 'reward': '⭐', 'completed': false, 'required': 2},
-    {'title': 'Half Way (4 Quizzes)', 'reward': '🏆', 'completed': false, 'required': 4},
+    {'title': 'Half Way', 'reward': '🏆', 'completed': false, 'required': 4},
     {'title': '6 Quizzes', 'reward': '👑', 'completed': false, 'required': 6},
-    {'title': 'All 8 Quizzes', 'reward': '💎', 'completed': false, 'required': 8},
+    {'title': 'All 8 Done', 'reward': '💎', 'completed': false, 'required': 8},
   ];
 
   @override
@@ -89,7 +89,7 @@ class _AchievementsPageState extends State<AchievementsPage>
   String _calculateLevel() {
     if (_totalQuizzes == 8) return 'Master';
     if (_totalQuizzes >= 6) return 'Expert';
-    if (_totalQuizzes >= 4) return 'Intermediate';
+    if (_totalQuizzes >= 4) return 'Inter';
     if (_totalQuizzes >= 2) return 'Learner';
     return 'Beginner';
   }
@@ -106,7 +106,7 @@ class _AchievementsPageState extends State<AchievementsPage>
         return '👑';
       case 'Expert':
         return '🏆';
-      case 'Intermediate':
+      case 'Inter':
         return '⭐';
       case 'Learner':
         return '🌟';
@@ -118,23 +118,19 @@ class _AchievementsPageState extends State<AchievementsPage>
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
     final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
     
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        toolbarHeight: isSmallDevice ? 56 : null,
-        title: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            'Achievements',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              fontSize: isVerySmallDevice ? 18 : isSmallDevice ? 20 : 22,
-            ),
+        toolbarHeight: 56,
+        title: Text(
+          'Achievements',
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+            fontSize: isVerySmallDevice ? 16 : isSmallDevice ? 18 : 20,
           ),
         ),
         centerTitle: true,
@@ -156,49 +152,39 @@ class _AchievementsPageState extends State<AchievementsPage>
           controller: _tabController,
           indicatorColor: Colors.white,
           indicatorWeight: 3,
-          labelPadding: EdgeInsets.symmetric(horizontal: isSmallDevice ? 4 : 8),
-          labelStyle: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-            fontSize: isVerySmallDevice ? 10 : isSmallDevice ? 11 : 12,
-          ),
+          labelPadding: const EdgeInsets.symmetric(horizontal: 2),
           tabs: [
             Tab(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.bar_chart, size: isSmallDevice ? 18 : 20),
-                    const SizedBox(height: 2),
-                    const Text('Stats'),
-                  ],
-                ),
+              height: 50,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.bar_chart, size: isSmallDevice ? 16 : 18),
+                  const SizedBox(height: 2),
+                  Text('Stats', style: TextStyle(fontSize: isSmallDevice ? 10 : 11)),
+                ],
               ),
             ),
             Tab(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.emoji_events, size: isSmallDevice ? 18 : 20),
-                    const SizedBox(height: 2),
-                    const Text('Badges'),
-                  ],
-                ),
+              height: 50,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.emoji_events, size: isSmallDevice ? 16 : 18),
+                  const SizedBox(height: 2),
+                  Text('Badges', style: TextStyle(fontSize: isSmallDevice ? 10 : 11)),
+                ],
               ),
             ),
             Tab(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.trending_up, size: isSmallDevice ? 18 : 20),
-                    const SizedBox(height: 2),
-                    const Text('Progress'),
-                  ],
-                ),
+              height: 50,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.trending_up, size: isSmallDevice ? 16 : 18),
+                  const SizedBox(height: 2),
+                  Text('Progress', style: TextStyle(fontSize: isSmallDevice ? 10 : 11)),
+                ],
               ),
             ),
           ],
@@ -233,12 +219,12 @@ class _AchievementsPageState extends State<AchievementsPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
-    final padding = isVerySmallDevice ? 10.0 : isSmallDevice ? 14.0 : 18.0;
-    final spacing = isVerySmallDevice ? 12.0 : isSmallDevice ? 16.0 : 20.0;
+    final padding = isVerySmallDevice ? 8.0 : isSmallDevice ? 10.0 : 14.0;
+    final spacing = isVerySmallDevice ? 10.0 : isSmallDevice ? 12.0 : 16.0;
     
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.symmetric(horizontal: padding, vertical: spacing),
+      padding: EdgeInsets.all(padding),
       child: Column(
         children: [
           _buildMotivationCard(),
@@ -262,14 +248,14 @@ class _AchievementsPageState extends State<AchievementsPage>
     final isVerySmallDevice = screenWidth < 320;
     
     return Container(
-      padding: EdgeInsets.all(isVerySmallDevice ? 14 : isSmallDevice ? 18 : 22),
+      padding: EdgeInsets.all(isVerySmallDevice ? 12 : isSmallDevice ? 14 : 18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Colors.purple[400]!, Colors.cyan[400]!],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(isSmallDevice ? 16 : 20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.purple.withOpacity(0.3),
@@ -281,8 +267,8 @@ class _AchievementsPageState extends State<AchievementsPage>
       child: Row(
         children: [
           Container(
-            width: isVerySmallDevice ? 60 : isSmallDevice ? 70 : 80,
-            height: isVerySmallDevice ? 60 : isSmallDevice ? 70 : 80,
+            width: isVerySmallDevice ? 50 : isSmallDevice ? 55 : 65,
+            height: isVerySmallDevice ? 50 : isSmallDevice ? 55 : 65,
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.3),
               shape: BoxShape.circle,
@@ -290,39 +276,35 @@ class _AchievementsPageState extends State<AchievementsPage>
             child: Center(
               child: Text(
                 _getLevelEmoji(),
-                style: TextStyle(fontSize: isVerySmallDevice ? 28 : isSmallDevice ? 32 : 40),
+                style: TextStyle(fontSize: isVerySmallDevice ? 24 : isSmallDevice ? 28 : 32),
               ),
             ),
           ),
-          SizedBox(width: isVerySmallDevice ? 10 : isSmallDevice ? 14 : 18),
+          SizedBox(width: isVerySmallDevice ? 8 : isSmallDevice ? 10 : 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Little Champion',
+                  'Champion',
                   style: GoogleFonts.poppins(
-                    fontSize: isVerySmallDevice ? 16 : isSmallDevice ? 18 : 20,
+                    fontSize: isVerySmallDevice ? 14 : isSmallDevice ? 16 : 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: isSmallDevice ? 6 : 8),
+                const SizedBox(height: 4),
                 Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isVerySmallDevice ? 10 : isSmallDevice ? 12 : 14,
-                    vertical: isVerySmallDevice ? 4 : 6,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(15),
                   ),
                   child: Text(
-                    'Level: $_userLevel',
+                    _userLevel,
                     style: GoogleFonts.poppins(
-                      fontSize: isVerySmallDevice ? 11 : isSmallDevice ? 12 : 13,
+                      fontSize: isVerySmallDevice ? 10 : isSmallDevice ? 11 : 12,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
@@ -342,10 +324,10 @@ class _AchievementsPageState extends State<AchievementsPage>
     final isVerySmallDevice = screenWidth < 320;
     
     return Container(
-      padding: EdgeInsets.all(isVerySmallDevice ? 14 : isSmallDevice ? 16 : 20),
+      padding: EdgeInsets.all(isVerySmallDevice ? 12 : isSmallDevice ? 14 : 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(isSmallDevice ? 16 : 20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -360,29 +342,25 @@ class _AchievementsPageState extends State<AchievementsPage>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: Text(
-                  'Quiz Completion',
-                  style: GoogleFonts.poppins(
-                    fontSize: isVerySmallDevice ? 14 : isSmallDevice ? 15 : 17,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.purple[800],
-                  ),
-                  overflow: TextOverflow.ellipsis,
+              Text(
+                'Progress',
+                style: GoogleFonts.poppins(
+                  fontSize: isVerySmallDevice ? 13 : isSmallDevice ? 14 : 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.purple[800],
                 ),
               ),
-              const SizedBox(width: 8),
               Text(
                 '$_totalQuizzes/8',
                 style: GoogleFonts.poppins(
-                  fontSize: isVerySmallDevice ? 18 : isSmallDevice ? 20 : 22,
+                  fontSize: isVerySmallDevice ? 16 : isSmallDevice ? 18 : 20,
                   fontWeight: FontWeight.bold,
                   color: Colors.purple[600],
                 ),
               ),
             ],
           ),
-          SizedBox(height: isSmallDevice ? 10 : 14),
+          const SizedBox(height: 10),
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
@@ -391,16 +369,16 @@ class _AchievementsPageState extends State<AchievementsPage>
               valueColor: AlwaysStoppedAnimation<Color>(
                 _totalQuizzes == 8 ? Colors.green[600]! : Colors.purple[600]!,
               ),
-              minHeight: isSmallDevice ? 10 : 12,
+              minHeight: 8,
             ),
           ),
-          SizedBox(height: isSmallDevice ? 8 : 10),
+          const SizedBox(height: 8),
           Text(
             _totalQuizzes == 8
-                ? '🎉 Congratulations! All quizzes completed!'
-                : '${8 - _totalQuizzes} more to complete!',
+                ? '🎉 All done!'
+                : '${8 - _totalQuizzes} more!',
             style: GoogleFonts.poppins(
-              fontSize: isVerySmallDevice ? 11 : isSmallDevice ? 12 : 13,
+              fontSize: isVerySmallDevice ? 10 : isSmallDevice ? 11 : 12,
               color: Colors.grey[700],
               fontWeight: FontWeight.w500,
             ),
@@ -419,14 +397,14 @@ class _AchievementsPageState extends State<AchievementsPage>
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
-      mainAxisSpacing: isVerySmallDevice ? 10 : isSmallDevice ? 12 : 14,
-      crossAxisSpacing: isVerySmallDevice ? 10 : isSmallDevice ? 12 : 14,
-      childAspectRatio: isVerySmallDevice ? 1.0 : isSmallDevice ? 1.15 : 1.3,
+      mainAxisSpacing: isVerySmallDevice ? 8 : 10,
+      crossAxisSpacing: isVerySmallDevice ? 8 : 10,
+      childAspectRatio: isVerySmallDevice ? 1.4 : isSmallDevice ? 1.5 : 1.6,
       children: [
         _buildStatCard(
           icon: Icons.quiz,
-          title: 'Quizzes',
-          value: '$_totalQuizzes/8',
+          title: 'Quiz',
+          value: '$_totalQuizzes',
           color: Colors.blue,
           progress: _totalQuizzes / 8,
         ),
@@ -438,14 +416,14 @@ class _AchievementsPageState extends State<AchievementsPage>
         ),
         _buildStatCard(
           icon: Icons.emoji_events,
-          title: 'Badges',
-          value: '${_badges.length}/8',
+          title: 'Badge',
+          value: '${_badges.length}',
           color: Colors.purple,
           progress: _badges.length / 8,
         ),
         _buildStatCard(
           icon: Icons.speed,
-          title: 'Average',
+          title: 'Avg',
           value: '${_averageScore.toStringAsFixed(0)}%',
           color: Colors.green,
         ),
@@ -465,13 +443,10 @@ class _AchievementsPageState extends State<AchievementsPage>
     final isVerySmallDevice = screenWidth < 320;
     
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isVerySmallDevice ? 10 : isSmallDevice ? 12 : 16,
-        vertical: isVerySmallDevice ? 12 : isSmallDevice ? 14 : 16,
-      ),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(isSmallDevice ? 14 : 18),
+        borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
             color: color.withOpacity(0.15),
@@ -484,7 +459,7 @@ class _AchievementsPageState extends State<AchievementsPage>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: EdgeInsets.all(isVerySmallDevice ? 6 : isSmallDevice ? 8 : 10),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
               shape: BoxShape.circle,
@@ -492,31 +467,28 @@ class _AchievementsPageState extends State<AchievementsPage>
             child: Icon(
               icon, 
               color: color, 
-              size: isVerySmallDevice ? 20 : isSmallDevice ? 22 : 26,
+              size: isVerySmallDevice ? 18 : 20,
             ),
           ),
-          SizedBox(height: isVerySmallDevice ? 6 : isSmallDevice ? 8 : 10),
+          const SizedBox(height: 4),
           Text(
             value,
             style: GoogleFonts.poppins(
-              fontSize: isVerySmallDevice ? 16 : isSmallDevice ? 18 : 20,
+              fontSize: isVerySmallDevice ? 14 : isSmallDevice ? 15 : 16,
               fontWeight: FontWeight.bold,
               color: color,
             ),
           ),
-          SizedBox(height: isVerySmallDevice ? 2 : 4),
           Text(
             title,
             style: GoogleFonts.poppins(
-              fontSize: isVerySmallDevice ? 10 : isSmallDevice ? 11 : 12,
+              fontSize: isVerySmallDevice ? 9 : 10,
               color: Colors.grey[600],
               fontWeight: FontWeight.w500,
             ),
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
           ),
           if (progress != null) ...[
-            SizedBox(height: isVerySmallDevice ? 4 : 6),
+            const SizedBox(height: 4),
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
@@ -538,10 +510,10 @@ class _AchievementsPageState extends State<AchievementsPage>
     final isVerySmallDevice = screenWidth < 320;
     
     return Container(
-      padding: EdgeInsets.all(isVerySmallDevice ? 14 : isSmallDevice ? 16 : 20),
+      padding: EdgeInsets.all(isVerySmallDevice ? 12 : isSmallDevice ? 14 : 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(isSmallDevice ? 16 : 20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -556,7 +528,7 @@ class _AchievementsPageState extends State<AchievementsPage>
           Row(
             children: [
               Container(
-                padding: EdgeInsets.all(isVerySmallDevice ? 5 : isSmallDevice ? 6 : 8),
+                padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
                   color: Colors.purple[50],
                   shape: BoxShape.circle,
@@ -564,26 +536,26 @@ class _AchievementsPageState extends State<AchievementsPage>
                 child: Icon(
                   Icons.history, 
                   color: Colors.purple[600], 
-                  size: isVerySmallDevice ? 16 : isSmallDevice ? 18 : 20,
+                  size: isVerySmallDevice ? 14 : 16,
                 ),
               ),
-              SizedBox(width: isSmallDevice ? 8 : 10),
+              const SizedBox(width: 8),
               Text(
-                'Recent Activity',
+                'Recent',
                 style: GoogleFonts.poppins(
-                  fontSize: isVerySmallDevice ? 14 : isSmallDevice ? 15 : 17,
+                  fontSize: isVerySmallDevice ? 13 : isSmallDevice ? 14 : 15,
                   fontWeight: FontWeight.bold,
                   color: Colors.purple[800],
                 ),
               ),
             ],
           ),
-          SizedBox(height: isVerySmallDevice ? 12 : isSmallDevice ? 14 : 16),
-          _buildActivityItem('Animals Quiz', '2 hours ago', Icons.pets, Colors.green),
-          SizedBox(height: isVerySmallDevice ? 6 : isSmallDevice ? 8 : 10),
-          _buildActivityItem('New Badge', 'Yesterday', Icons.emoji_events, Colors.amber),
-          SizedBox(height: isVerySmallDevice ? 6 : isSmallDevice ? 8 : 10),
-          _buildActivityItem('Math Quiz', '2 days ago', Icons.calculate, Colors.blue),
+          const SizedBox(height: 10),
+          _buildActivityItem('Quiz', '2h ago', Icons.pets, Colors.green),
+          const SizedBox(height: 6),
+          _buildActivityItem('Badge', 'Yesterday', Icons.emoji_events, Colors.amber),
+          const SizedBox(height: 6),
+          _buildActivityItem('Math', '2d ago', Icons.calculate, Colors.blue),
         ],
       ),
     );
@@ -591,31 +563,30 @@ class _AchievementsPageState extends State<AchievementsPage>
 
   Widget _buildActivityItem(String title, String time, IconData icon, Color color) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
     
     return Container(
-      padding: EdgeInsets.all(isVerySmallDevice ? 8 : isSmallDevice ? 10 : 12),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: color.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
           Container(
-            width: isVerySmallDevice ? 30 : isSmallDevice ? 34 : 38,
-            height: isVerySmallDevice ? 30 : isSmallDevice ? 34 : 38,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon, 
-              size: isVerySmallDevice ? 14 : isSmallDevice ? 16 : 18, 
+              size: 14, 
               color: color,
             ),
           ),
-          SizedBox(width: isVerySmallDevice ? 8 : isSmallDevice ? 10 : 12),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -623,17 +594,15 @@ class _AchievementsPageState extends State<AchievementsPage>
                 Text(
                   title,
                   style: GoogleFonts.poppins(
-                    fontSize: isVerySmallDevice ? 11 : isSmallDevice ? 12 : 14,
+                    fontSize: isVerySmallDevice ? 10 : 11,
                     fontWeight: FontWeight.w600,
                     color: Colors.grey[800],
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: 1),
                 Text(
                   time,
                   style: GoogleFonts.poppins(
-                    fontSize: isVerySmallDevice ? 10 : isSmallDevice ? 11 : 12,
+                    fontSize: isVerySmallDevice ? 9 : 10,
                     color: Colors.grey[600],
                   ),
                 ),
@@ -649,12 +618,12 @@ class _AchievementsPageState extends State<AchievementsPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
-    final padding = isVerySmallDevice ? 10.0 : isSmallDevice ? 14.0 : 18.0;
-    final spacing = isVerySmallDevice ? 12.0 : isSmallDevice ? 16.0 : 20.0;
+    final padding = isVerySmallDevice ? 8.0 : isSmallDevice ? 10.0 : 14.0;
+    final spacing = isVerySmallDevice ? 10.0 : isSmallDevice ? 12.0 : 16.0;
     
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.symmetric(horizontal: padding, vertical: spacing),
+      padding: EdgeInsets.all(padding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -665,23 +634,23 @@ class _AchievementsPageState extends State<AchievementsPage>
           Text(
             'Earned (${_badges.length}/8)',
             style: GoogleFonts.poppins(
-              fontSize: isVerySmallDevice ? 16 : isSmallDevice ? 17 : 19,
+              fontSize: isVerySmallDevice ? 14 : isSmallDevice ? 15 : 17,
               fontWeight: FontWeight.w700,
               color: Colors.purple[800],
             ),
           ),
-          SizedBox(height: isSmallDevice ? 10 : 14),
+          const SizedBox(height: 10),
           _badges.isEmpty ? _buildEmptyBadgesState() : _buildEarnedBadgesGrid(),
-          SizedBox(height: isVerySmallDevice ? 16 : isSmallDevice ? 20 : 24),
+          SizedBox(height: spacing),
           Text(
             'All Badges',
             style: GoogleFonts.poppins(
-              fontSize: isVerySmallDevice ? 16 : isSmallDevice ? 17 : 19,
+              fontSize: isVerySmallDevice ? 14 : isSmallDevice ? 15 : 17,
               fontWeight: FontWeight.w700,
               color: Colors.purple[800],
             ),
           ),
-          SizedBox(height: isSmallDevice ? 10 : 14),
+          const SizedBox(height: 10),
           _buildAllBadgesList(),
           const SizedBox(height: 20),
         ],
@@ -695,12 +664,12 @@ class _AchievementsPageState extends State<AchievementsPage>
     final isVerySmallDevice = screenWidth < 320;
     
     return Container(
-      padding: EdgeInsets.all(isVerySmallDevice ? 14 : isSmallDevice ? 16 : 20),
+      padding: EdgeInsets.all(isVerySmallDevice ? 12 : isSmallDevice ? 14 : 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Colors.amber[100]!, Colors.orange[100]!],
         ),
-        borderRadius: BorderRadius.circular(isSmallDevice ? 16 : 20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.orange.withOpacity(0.2),
@@ -712,78 +681,72 @@ class _AchievementsPageState extends State<AchievementsPage>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Expanded(
-            child: Column(
-              children: [
-                Text(
-                  '${_badges.length}',
-                  style: GoogleFonts.poppins(
-                    fontSize: isVerySmallDevice ? 22 : isSmallDevice ? 24 : 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orange[800],
-                  ),
+          Column(
+            children: [
+              Text(
+                '${_badges.length}',
+                style: GoogleFonts.poppins(
+                  fontSize: isVerySmallDevice ? 18 : isSmallDevice ? 20 : 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange[800],
                 ),
-                Text(
-                  'Earned',
-                  style: GoogleFonts.poppins(
-                    fontSize: isVerySmallDevice ? 11 : isSmallDevice ? 12 : 13,
-                    color: Colors.orange[700],
-                  ),
+              ),
+              Text(
+                'Earned',
+                style: GoogleFonts.poppins(
+                  fontSize: isVerySmallDevice ? 10 : 11,
+                  color: Colors.orange[700],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           Container(
             width: 1,
-            height: isVerySmallDevice ? 35 : isSmallDevice ? 40 : 45,
+            height: 30,
             color: Colors.orange[300],
           ),
-          Expanded(
-            child: Column(
-              children: [
-                Text(
-                  '${8 - _badges.length}',
-                  style: GoogleFonts.poppins(
-                    fontSize: isVerySmallDevice ? 22 : isSmallDevice ? 24 : 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orange[600],
-                  ),
+          Column(
+            children: [
+              Text(
+                '${8 - _badges.length}',
+                style: GoogleFonts.poppins(
+                  fontSize: isVerySmallDevice ? 18 : isSmallDevice ? 20 : 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange[600],
                 ),
-                Text(
-                  'Left',
-                  style: GoogleFonts.poppins(
-                    fontSize: isVerySmallDevice ? 11 : isSmallDevice ? 12 : 13,
-                    color: Colors.orange[700],
-                  ),
+              ),
+              Text(
+                'Left',
+                style: GoogleFonts.poppins(
+                  fontSize: isVerySmallDevice ? 10 : 11,
+                  color: Colors.orange[700],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           Container(
             width: 1,
-            height: isVerySmallDevice ? 35 : isSmallDevice ? 40 : 45,
+            height: 30,
             color: Colors.orange[300],
           ),
-          Expanded(
-            child: Column(
-              children: [
-                Text(
-                  '${(_badges.length / 8 * 100).toStringAsFixed(0)}%',
-                  style: GoogleFonts.poppins(
-                    fontSize: isVerySmallDevice ? 22 : isSmallDevice ? 24 : 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orange[800],
-                  ),
+          Column(
+            children: [
+              Text(
+                '${(_badges.length / 8 * 100).toStringAsFixed(0)}%',
+                style: GoogleFonts.poppins(
+                  fontSize: isVerySmallDevice ? 18 : isSmallDevice ? 20 : 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange[800],
                 ),
-                Text(
-                  'Done',
-                  style: GoogleFonts.poppins(
-                    fontSize: isVerySmallDevice ? 11 : isSmallDevice ? 12 : 13,
-                    color: Colors.orange[700],
-                  ),
+              ),
+              Text(
+                'Done',
+                style: GoogleFonts.poppins(
+                  fontSize: isVerySmallDevice ? 10 : 11,
+                  color: Colors.orange[700],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -794,12 +757,12 @@ class _AchievementsPageState extends State<AchievementsPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
-    final padding = isVerySmallDevice ? 10.0 : isSmallDevice ? 14.0 : 18.0;
-    final spacing = isVerySmallDevice ? 12.0 : isSmallDevice ? 16.0 : 20.0;
+    final padding = isVerySmallDevice ? 8.0 : isSmallDevice ? 10.0 : 14.0;
+    final spacing = isVerySmallDevice ? 10.0 : isSmallDevice ? 12.0 : 16.0;
     
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.symmetric(horizontal: padding, vertical: spacing),
+      padding: EdgeInsets.all(padding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -810,14 +773,14 @@ class _AchievementsPageState extends State<AchievementsPage>
           Text(
             'Milestones',
             style: GoogleFonts.poppins(
-              fontSize: isVerySmallDevice ? 16 : isSmallDevice ? 17 : 19,
+              fontSize: isVerySmallDevice ? 14 : isSmallDevice ? 15 : 17,
               fontWeight: FontWeight.w700,
               color: Colors.purple[800],
             ),
           ),
-          SizedBox(height: isSmallDevice ? 10 : 14),
+          const SizedBox(height: 10),
           ..._milestones.map((milestone) => Padding(
-            padding: EdgeInsets.only(bottom: isVerySmallDevice ? 8 : isSmallDevice ? 10 : 12),
+            padding: const EdgeInsets.only(bottom: 8),
             child: _buildMilestoneCard(milestone),
           )),
           const SizedBox(height: 20),
@@ -832,10 +795,10 @@ class _AchievementsPageState extends State<AchievementsPage>
     final isVerySmallDevice = screenWidth < 320;
     
     return Container(
-      padding: EdgeInsets.all(isVerySmallDevice ? 14 : isSmallDevice ? 16 : 20),
+      padding: EdgeInsets.all(isVerySmallDevice ? 12 : isSmallDevice ? 14 : 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(isSmallDevice ? 16 : 20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -848,18 +811,18 @@ class _AchievementsPageState extends State<AchievementsPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Overall Progress',
+            'Overall',
             style: GoogleFonts.poppins(
-              fontSize: isVerySmallDevice ? 14 : isSmallDevice ? 15 : 17,
+              fontSize: isVerySmallDevice ? 13 : isSmallDevice ? 14 : 15,
               fontWeight: FontWeight.bold,
               color: Colors.purple[800],
             ),
           ),
-          SizedBox(height: isVerySmallDevice ? 12 : isSmallDevice ? 14 : 18),
+          const SizedBox(height: 12),
           _buildProgressItem('Quizzes', _totalQuizzes, 8, Colors.blue),
-          SizedBox(height: isVerySmallDevice ? 10 : isSmallDevice ? 12 : 14),
+          const SizedBox(height: 10),
           _buildProgressItem('Badges', _badges.length, 8, Colors.purple),
-          SizedBox(height: isVerySmallDevice ? 10 : isSmallDevice ? 12 : 14),
+          const SizedBox(height: 10),
           _buildProgressItem('Milestones', _milestones.where((m) => m['completed']).length, 5, Colors.green),
         ],
       ),
@@ -868,7 +831,6 @@ class _AchievementsPageState extends State<AchievementsPage>
 
   Widget _buildProgressItem(String title, int current, int total, Color color) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
     
     return Column(
@@ -880,7 +842,7 @@ class _AchievementsPageState extends State<AchievementsPage>
             Text(
               title,
               style: GoogleFonts.poppins(
-                fontSize: isVerySmallDevice ? 11 : isSmallDevice ? 12 : 13,
+                fontSize: isVerySmallDevice ? 10 : 11,
                 fontWeight: FontWeight.w600,
                 color: Colors.grey[700],
               ),
@@ -888,21 +850,21 @@ class _AchievementsPageState extends State<AchievementsPage>
             Text(
               '$current/$total',
               style: GoogleFonts.poppins(
-                fontSize: isVerySmallDevice ? 11 : isSmallDevice ? 12 : 13,
+                fontSize: isVerySmallDevice ? 10 : 11,
                 fontWeight: FontWeight.bold,
                 color: color,
               ),
             ),
           ],
         ),
-        SizedBox(height: isVerySmallDevice ? 4 : 6),
+        const SizedBox(height: 4),
         ClipRRect(
           borderRadius: BorderRadius.circular(10),
           child: LinearProgressIndicator(
             value: current / total,
             backgroundColor: color.withOpacity(0.1),
             valueColor: AlwaysStoppedAnimation<Color>(color),
-            minHeight: isVerySmallDevice ? 5 : isSmallDevice ? 6 : 7,
+            minHeight: 5,
           ),
         ),
       ],
@@ -922,7 +884,7 @@ class _AchievementsPageState extends State<AchievementsPage>
       nextLevel = 'Learner';
     } else if (_totalQuizzes < 4) {
       nextLevelQuizzes = 4;
-      nextLevel = 'Intermediate';
+      nextLevel = 'Inter';
     } else if (_totalQuizzes < 6) {
       nextLevelQuizzes = 6;
       nextLevel = 'Expert';
@@ -934,12 +896,12 @@ class _AchievementsPageState extends State<AchievementsPage>
     double progress = _totalQuizzes == 8 ? 1.0 : (_totalQuizzes % nextLevelQuizzes) / nextLevelQuizzes;
 
     return Container(
-      padding: EdgeInsets.all(isVerySmallDevice ? 14 : isSmallDevice ? 18 : 22),
+      padding: EdgeInsets.all(isVerySmallDevice ? 12 : isSmallDevice ? 14 : 18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Colors.purple[100]!, Colors.cyan[100]!],
         ),
-        borderRadius: BorderRadius.circular(isSmallDevice ? 16 : 20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.purple.withOpacity(0.15),
@@ -952,34 +914,31 @@ class _AchievementsPageState extends State<AchievementsPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Current Level',
+            'Level',
             style: GoogleFonts.poppins(
-              fontSize: isVerySmallDevice ? 13 : isSmallDevice ? 14 : 15,
+              fontSize: isVerySmallDevice ? 12 : isSmallDevice ? 13 : 14,
               fontWeight: FontWeight.w600,
               color: Colors.purple[800],
             ),
           ),
-          SizedBox(height: isVerySmallDevice ? 6 : 8),
+          const SizedBox(height: 6),
           Row(
             children: [
               Text(
                 _getLevelEmoji(),
-                style: TextStyle(fontSize: isVerySmallDevice ? 26 : isSmallDevice ? 30 : 34),
+                style: TextStyle(fontSize: isVerySmallDevice ? 24 : 28),
               ),
-              SizedBox(width: isVerySmallDevice ? 8 : isSmallDevice ? 10 : 12),
+              const SizedBox(width: 8),
               Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isVerySmallDevice ? 10 : isSmallDevice ? 12 : 14,
-                  vertical: isVerySmallDevice ? 5 : isSmallDevice ? 6 : 7,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.purple[600],
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(15),
                 ),
                 child: Text(
                   _userLevel,
                   style: GoogleFonts.poppins(
-                    fontSize: isVerySmallDevice ? 12 : isSmallDevice ? 13 : 14,
+                    fontSize: isVerySmallDevice ? 11 : 12,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -988,55 +947,31 @@ class _AchievementsPageState extends State<AchievementsPage>
             ],
           ),
           if (_totalQuizzes < 8) ...[
-            SizedBox(height: isVerySmallDevice ? 12 : isSmallDevice ? 16 : 20),
+            const SizedBox(height: 12),
             Text(
-              'Progress to $nextLevel',
+              'Next: $nextLevel',
               style: GoogleFonts.poppins(
-                fontSize: isVerySmallDevice ? 11 : isSmallDevice ? 12 : 13,
+                fontSize: isVerySmallDevice ? 10 : 11,
                 color: Colors.grey[700],
                 fontWeight: FontWeight.w500,
               ),
             ),
-            SizedBox(height: isVerySmallDevice ? 6 : 8),
+            const SizedBox(height: 6),
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
                 value: progress,
                 backgroundColor: Colors.white,
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.purple[600]!),
-                minHeight: isVerySmallDevice ? 7 : isSmallDevice ? 8 : 9,
+                minHeight: 6,
               ),
             ),
-            SizedBox(height: isVerySmallDevice ? 4 : 6),
+            const SizedBox(height: 4),
             Text(
-              '${nextLevelQuizzes - _totalQuizzes} more to $nextLevel level',
+              '${nextLevelQuizzes - _totalQuizzes} more',
               style: GoogleFonts.poppins(
-                fontSize: isVerySmallDevice ? 10 : isSmallDevice ? 11 : 12,
+                fontSize: isVerySmallDevice ? 9 : 10,
                 color: Colors.grey[600],
-              ),
-            ),
-          ] else ...[
-            SizedBox(height: isVerySmallDevice ? 12 : isSmallDevice ? 14 : 16),
-            Container(
-              padding: EdgeInsets.all(isVerySmallDevice ? 8 : isSmallDevice ? 10 : 12),
-              decoration: BoxDecoration(
-                color: Colors.green[100],
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green[700], size: isVerySmallDevice ? 16 : 18),
-                  SizedBox(width: isVerySmallDevice ? 6 : 8),
-                  Text(
-                    'Maximum level!',
-                    style: GoogleFonts.poppins(
-                      fontSize: isVerySmallDevice ? 11 : isSmallDevice ? 12 : 13,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.green[700],
-                    ),
-                  ),
-                ],
               ),
             ),
           ],
@@ -1051,29 +986,20 @@ class _AchievementsPageState extends State<AchievementsPage>
     final isVerySmallDevice = screenWidth < 320;
     
     return Container(
-      padding: EdgeInsets.all(isVerySmallDevice ? 12 : isSmallDevice ? 14 : 16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: milestone['completed'] ? Colors.green[50] : Colors.white,
-        borderRadius: BorderRadius.circular(isSmallDevice ? 12 : 14),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: milestone['completed'] ? Colors.green[300]! : Colors.grey[300]!,
           width: 2,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: milestone['completed'] 
-                ? Colors.green.withOpacity(0.1) 
-                : Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Row(
         children: [
           Container(
-            width: isVerySmallDevice ? 38 : isSmallDevice ? 42 : 46,
-            height: isVerySmallDevice ? 38 : isSmallDevice ? 42 : 46,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: milestone['completed'] 
                   ? Colors.green[100] 
@@ -1083,11 +1009,11 @@ class _AchievementsPageState extends State<AchievementsPage>
             child: Center(
               child: Text(
                 milestone['reward'],
-                style: TextStyle(fontSize: isVerySmallDevice ? 20 : isSmallDevice ? 22 : 24),
+                style: const TextStyle(fontSize: 18),
               ),
             ),
           ),
-          SizedBox(width: isVerySmallDevice ? 10 : isSmallDevice ? 12 : 14),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1095,21 +1021,19 @@ class _AchievementsPageState extends State<AchievementsPage>
                 Text(
                   milestone['title'],
                   style: GoogleFonts.poppins(
-                    fontSize: isVerySmallDevice ? 12 : isSmallDevice ? 13 : 14,
+                    fontSize: isVerySmallDevice ? 11 : 12,
                     fontWeight: FontWeight.w600,
                     color: milestone['completed'] 
                         ? Colors.green[800] 
                         : Colors.grey[800],
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: 2),
                 Text(
                   milestone['completed'] 
-                      ? 'Completed!' 
-                      : 'Need ${milestone['required']} quizzes',
+                      ? 'Done!' 
+                      : '${milestone['required']} quiz',
                   style: GoogleFonts.poppins(
-                    fontSize: isVerySmallDevice ? 10 : isSmallDevice ? 11 : 12,
+                    fontSize: isVerySmallDevice ? 9 : 10,
                     color: Colors.grey[600],
                   ),
                 ),
@@ -1119,7 +1043,7 @@ class _AchievementsPageState extends State<AchievementsPage>
           if (milestone['completed'])
             Icon(Icons.check_circle, 
               color: Colors.green[600], 
-              size: isVerySmallDevice ? 20 : isSmallDevice ? 22 : 24),
+              size: 20),
         ],
       ),
     );
@@ -1132,53 +1056,37 @@ class _AchievementsPageState extends State<AchievementsPage>
     
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(isVerySmallDevice ? 12 : isSmallDevice ? 14 : 16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Colors.purple[100]!, Colors.cyan[50]!],
         ),
-        borderRadius: BorderRadius.circular(isSmallDevice ? 14 : 16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.purple.withOpacity(0.15),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
           Container(
-            width: isVerySmallDevice ? 44 : isSmallDevice ? 48 : 52,
-            height: isVerySmallDevice ? 44 : isSmallDevice ? 48 : 52,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                'assets/home_screen/buddy.png',
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Center(
-                    child: Text('🤖', style: TextStyle(fontSize: isVerySmallDevice ? 22 : 26)),
-                  );
-                },
-              ),
+            child: const Center(
+              child: Text('🤖', style: TextStyle(fontSize: 20)),
             ),
           ),
-          SizedBox(width: isVerySmallDevice ? 10 : isSmallDevice ? 12 : 14),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               _quote,
               style: GoogleFonts.poppins(
-                fontSize: isVerySmallDevice ? 11 : isSmallDevice ? 12 : 13,
+                fontSize: isVerySmallDevice ? 10 : isSmallDevice ? 11 : 12,
                 fontWeight: FontWeight.w600,
                 color: Colors.purple[900],
-                height: 1.3,
+                height: 1.2,
               ),
-              maxLines: 3,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -1193,13 +1101,10 @@ class _AchievementsPageState extends State<AchievementsPage>
     final isVerySmallDevice = screenWidth < 320;
     
     return Container(
-      padding: EdgeInsets.symmetric(
-        vertical: isVerySmallDevice ? 28 : isSmallDevice ? 32 : 36,
-        horizontal: isVerySmallDevice ? 20 : isSmallDevice ? 24 : 28,
-      ),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(isSmallDevice ? 14 : 18),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Colors.purple[100]!, width: 2),
       ),
       child: Center(
@@ -1207,25 +1112,24 @@ class _AchievementsPageState extends State<AchievementsPage>
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.emoji_events, 
-              size: isVerySmallDevice ? 48 : isSmallDevice ? 56 : 64, 
+              size: 48, 
               color: Colors.grey[400]),
-            SizedBox(height: isVerySmallDevice ? 10 : isSmallDevice ? 12 : 14),
+            const SizedBox(height: 10),
             Text(
               'No badges yet',
               style: GoogleFonts.poppins(
-                fontSize: isVerySmallDevice ? 16 : isSmallDevice ? 17 : 19,
+                fontSize: isVerySmallDevice ? 14 : isSmallDevice ? 15 : 16,
                 fontWeight: FontWeight.w700,
                 color: Colors.purple[700],
               ),
             ),
-            SizedBox(height: isVerySmallDevice ? 4 : 6),
+            const SizedBox(height: 4),
             Text(
-              'Complete quizzes to earn badges!',
+              'Complete quizzes!',
               style: GoogleFonts.poppins(
-                fontSize: isVerySmallDevice ? 11 : isSmallDevice ? 12 : 13,
+                fontSize: isVerySmallDevice ? 10 : 11,
                 color: Colors.grey[700],
               ),
-              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -1236,16 +1140,14 @@ class _AchievementsPageState extends State<AchievementsPage>
   Widget _buildEarnedBadgesGrid() {
     final screenWidth = MediaQuery.of(context).size.width;
     final isVerySmallDevice = screenWidth < 320;
-    final crossAxisCount = isVerySmallDevice ? 2 : 3;
-    final spacing = isVerySmallDevice ? 10.0 : screenWidth < 360 ? 12.0 : 14.0;
     
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        mainAxisSpacing: spacing,
-        crossAxisSpacing: spacing,
+        crossAxisCount: isVerySmallDevice ? 3 : 4,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
         childAspectRatio: 1,
       ),
       itemCount: _badges.length,
@@ -1261,12 +1163,8 @@ class _AchievementsPageState extends State<AchievementsPage>
   }
 
   Widget _buildEarnedBadgeTile(Map<String, dynamic> badge) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallDevice = screenWidth < 360;
-    final isVerySmallDevice = screenWidth < 320;
-    
     return Container(
-      padding: EdgeInsets.all(isVerySmallDevice ? 6 : isSmallDevice ? 8 : 10),
+      padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -1274,37 +1172,30 @@ class _AchievementsPageState extends State<AchievementsPage>
             (badge['color'] as Color).withOpacity(0.2),
           ],
         ),
-        borderRadius: BorderRadius.circular(isSmallDevice ? 10 : 14),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: (badge['color'] as Color).withOpacity(0.3),
-          width: 2,
+          width: 1.5,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: (badge['color'] as Color).withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             badge['icon'],
-            size: isVerySmallDevice ? 22 : isSmallDevice ? 26 : 30,
+            size: 20,
             color: badge['color'],
           ),
-          SizedBox(height: isVerySmallDevice ? 3 : 5),
+          const SizedBox(height: 2),
           Text(
             badge['name'],
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
-              fontSize: isVerySmallDevice ? 8 : isSmallDevice ? 9 : 10,
+              fontSize: 8,
               fontWeight: FontWeight.w600,
               color: Colors.grey[800],
             ),
-            maxLines: 2,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
         ],
@@ -1316,16 +1207,15 @@ class _AchievementsPageState extends State<AchievementsPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
-    final spacing = isVerySmallDevice ? 10.0 : isSmallDevice ? 12.0 : 14.0;
     
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        mainAxisSpacing: spacing,
-        crossAxisSpacing: spacing,
-        childAspectRatio: isVerySmallDevice ? 1.1 : isSmallDevice ? 1.25 : 1.4,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: isVerySmallDevice ? 1.5 : isSmallDevice ? 1.6 : 1.7,
       ),
       itemCount: _allBadges.length,
       itemBuilder: (context, index) {
@@ -1338,27 +1228,17 @@ class _AchievementsPageState extends State<AchievementsPage>
 
   Widget _buildBadgeCard(Map<String, dynamic> badge, bool isEarned) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
     
     return Container(
-      padding: EdgeInsets.all(isVerySmallDevice ? 10 : isSmallDevice ? 12 : 14),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: isEarned ? (badge['color'] as Color).withOpacity(0.1) : Colors.white,
-        borderRadius: BorderRadius.circular(isSmallDevice ? 12 : 16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isEarned ? (badge['color'] as Color) : Colors.grey[300]!,
-          width: 2,
+          width: 1.5,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: isEarned 
-                ? (badge['color'] as Color).withOpacity(0.2)
-                : Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1369,30 +1249,30 @@ class _AchievementsPageState extends State<AchievementsPage>
             children: [
               Icon(
                 badge['icon'],
-                size: isVerySmallDevice ? 26 : isSmallDevice ? 30 : 34,
+                size: isVerySmallDevice ? 24 : 28,
                 color: isEarned ? badge['color'] : Colors.grey[400],
               ),
               if (!isEarned)
                 Container(
-                  width: isVerySmallDevice ? 28 : isSmallDevice ? 32 : 36,
-                  height: isVerySmallDevice ? 28 : isSmallDevice ? 32 : 36,
+                  width: 28,
+                  height: 28,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.7),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.lock_outline,
-                    size: isVerySmallDevice ? 14 : isSmallDevice ? 16 : 18,
-                    color: Colors.grey[600],
+                    size: 14,
+                    color: Colors.grey,
                   ),
                 ),
             ],
           ),
-          SizedBox(height: isVerySmallDevice ? 4 : isSmallDevice ? 6 : 8),
+          const SizedBox(height: 4),
           Text(
             badge['name'],
             style: GoogleFonts.poppins(
-              fontSize: isVerySmallDevice ? 10 : isSmallDevice ? 11 : 12,
+              fontSize: isVerySmallDevice ? 9 : 10,
               fontWeight: FontWeight.w600,
               color: isEarned ? Colors.grey[800] : Colors.grey[600],
             ),
@@ -1400,23 +1280,20 @@ class _AchievementsPageState extends State<AchievementsPage>
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          SizedBox(height: 2),
           Text(
             badge['desc'],
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
-              fontSize: isVerySmallDevice ? 8 : isSmallDevice ? 9 : 10,
+              fontSize: 8,
               color: Colors.grey[600],
             ),
-            maxLines: 2,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          if (isEarned) ...[
-            SizedBox(height: isVerySmallDevice ? 2 : 4),
-            Icon(Icons.check_circle, 
-              color: Colors.green[600], 
-              size: isVerySmallDevice ? 14 : isSmallDevice ? 15 : 16),
-          ],
+          if (isEarned)
+            const Icon(Icons.check_circle, 
+              color: Colors.green, 
+              size: 12),
         ],
       ),
     );

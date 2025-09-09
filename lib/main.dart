@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
         ),
         GetPage(
           name: VEHICLE_NAME_SCREEN,
-          page: () => const QuizScreen(quizId: 'vehicals'),
+          page: () => const QuizScreen(quizId: 'vehicles'),
         ),
         GetPage(
           name: MATH_SCREEN,
