@@ -12,6 +12,7 @@ class AchievementsPage extends StatefulWidget {
 class _AchievementsPageState extends State<AchievementsPage>
     with SingleTickerProviderStateMixin {
   List<String> _badges = [];
+  List<String> _badgeAssetIds = [];
   String _quote = '';
   late TabController _tabController;
   int _totalQuizzes = 0;
@@ -47,6 +48,28 @@ class _AchievementsPageState extends State<AchievementsPage>
     {'title': 'All 8 Done', 'reward': '💎', 'completed': false, 'required': 8},
   ];
 
+  static const Map<String, String> _idToPrettyName = {
+    'animalQuizz': 'Animal Name',
+    'birdQuizz': 'Bird',
+    'colorQuizz': 'Color',
+    'fruitQuizz': 'Fruit',
+    'mathQuizz': 'Math',
+    'soundQuizz': 'Sound',
+    'vegetableQuizz': 'Vegetable',
+    'vehicalQuizz': 'Vehicle',
+  };
+
+  static const Map<String, String> _stableToAssetId = {
+    'animal_name': 'animalQuizz',
+    'animal_sound': 'soundQuizz',
+    'math': 'mathQuizz',
+    'vehicals': 'vehicalQuizz',
+    'fruits': 'fruitQuizz',
+    'vegetables': 'vegetableQuizz',
+    'colors': 'colorQuizz',
+    'bird': 'birdQuizz',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -72,6 +95,10 @@ class _AchievementsPageState extends State<AchievementsPage>
     final list = prefs.getStringList('badges') ?? [];
     setState(() {
       _badges = List<String>.from(list);
+      _badgeAssetIds = _badges
+          .map((id) => _stableToAssetId[id] ?? id)
+          .toSet()
+          .toList();
     });
   }
 
@@ -120,7 +147,7 @@ class _AchievementsPageState extends State<AchievementsPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
-    
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -221,7 +248,7 @@ class _AchievementsPageState extends State<AchievementsPage>
     final isVerySmallDevice = screenWidth < 320;
     final padding = isVerySmallDevice ? 8.0 : isSmallDevice ? 10.0 : 14.0;
     final spacing = isVerySmallDevice ? 10.0 : isSmallDevice ? 12.0 : 16.0;
-    
+
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.all(padding),
@@ -246,7 +273,7 @@ class _AchievementsPageState extends State<AchievementsPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
-    
+
     return Container(
       padding: EdgeInsets.all(isVerySmallDevice ? 12 : isSmallDevice ? 14 : 18),
       decoration: BoxDecoration(
@@ -322,7 +349,7 @@ class _AchievementsPageState extends State<AchievementsPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
-    
+
     return Container(
       padding: EdgeInsets.all(isVerySmallDevice ? 12 : isSmallDevice ? 14 : 16),
       decoration: BoxDecoration(
@@ -392,7 +419,7 @@ class _AchievementsPageState extends State<AchievementsPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
-    
+
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -417,9 +444,9 @@ class _AchievementsPageState extends State<AchievementsPage>
         _buildStatCard(
           icon: Icons.emoji_events,
           title: 'Badge',
-          value: '${_badges.length}',
+          value: '${_badgeAssetIds.length}',
           color: Colors.purple,
-          progress: _badges.length / 8,
+          progress: _badgeAssetIds.length / 8,
         ),
         _buildStatCard(
           icon: Icons.speed,
@@ -441,7 +468,7 @@ class _AchievementsPageState extends State<AchievementsPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
-    
+
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -465,8 +492,8 @@ class _AchievementsPageState extends State<AchievementsPage>
               shape: BoxShape.circle,
             ),
             child: Icon(
-              icon, 
-              color: color, 
+              icon,
+              color: color,
               size: isVerySmallDevice ? 18 : 20,
             ),
           ),
@@ -508,7 +535,7 @@ class _AchievementsPageState extends State<AchievementsPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
-    
+
     return Container(
       padding: EdgeInsets.all(isVerySmallDevice ? 12 : isSmallDevice ? 14 : 16),
       decoration: BoxDecoration(
@@ -534,8 +561,8 @@ class _AchievementsPageState extends State<AchievementsPage>
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.history, 
-                  color: Colors.purple[600], 
+                  Icons.history,
+                  color: Colors.purple[600],
                   size: isVerySmallDevice ? 14 : 16,
                 ),
               ),
@@ -564,7 +591,7 @@ class _AchievementsPageState extends State<AchievementsPage>
   Widget _buildActivityItem(String title, String time, IconData icon, Color color) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isVerySmallDevice = screenWidth < 320;
-    
+
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -581,8 +608,8 @@ class _AchievementsPageState extends State<AchievementsPage>
               shape: BoxShape.circle,
             ),
             child: Icon(
-              icon, 
-              size: 14, 
+              icon,
+              size: 14,
               color: color,
             ),
           ),
@@ -620,7 +647,7 @@ class _AchievementsPageState extends State<AchievementsPage>
     final isVerySmallDevice = screenWidth < 320;
     final padding = isVerySmallDevice ? 8.0 : isSmallDevice ? 10.0 : 14.0;
     final spacing = isVerySmallDevice ? 10.0 : isSmallDevice ? 12.0 : 16.0;
-    
+
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.all(padding),
@@ -632,7 +659,7 @@ class _AchievementsPageState extends State<AchievementsPage>
           _buildBadgeStats(),
           SizedBox(height: spacing),
           Text(
-            'Earned (${_badges.length}/8)',
+            'Earned (${_badgeAssetIds.length}/8)',
             style: GoogleFonts.poppins(
               fontSize: isVerySmallDevice ? 14 : isSmallDevice ? 15 : 17,
               fontWeight: FontWeight.w700,
@@ -640,7 +667,7 @@ class _AchievementsPageState extends State<AchievementsPage>
             ),
           ),
           const SizedBox(height: 10),
-          _badges.isEmpty ? _buildEmptyBadgesState() : _buildEarnedBadgesGrid(),
+          _badgeAssetIds.isEmpty ? _buildEmptyBadgesState() : _buildEarnedBadgesGrid(),
           SizedBox(height: spacing),
           Text(
             'All Badges',
@@ -662,7 +689,7 @@ class _AchievementsPageState extends State<AchievementsPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
-    
+
     return Container(
       padding: EdgeInsets.all(isVerySmallDevice ? 12 : isSmallDevice ? 14 : 16),
       decoration: BoxDecoration(
@@ -684,7 +711,7 @@ class _AchievementsPageState extends State<AchievementsPage>
           Column(
             children: [
               Text(
-                '${_badges.length}',
+                '${_badgeAssetIds.length}',
                 style: GoogleFonts.poppins(
                   fontSize: isVerySmallDevice ? 18 : isSmallDevice ? 20 : 24,
                   fontWeight: FontWeight.bold,
@@ -708,7 +735,7 @@ class _AchievementsPageState extends State<AchievementsPage>
           Column(
             children: [
               Text(
-                '${8 - _badges.length}',
+                '${8 - _badgeAssetIds.length}',
                 style: GoogleFonts.poppins(
                   fontSize: isVerySmallDevice ? 18 : isSmallDevice ? 20 : 24,
                   fontWeight: FontWeight.bold,
@@ -732,7 +759,7 @@ class _AchievementsPageState extends State<AchievementsPage>
           Column(
             children: [
               Text(
-                '${(_badges.length / 8 * 100).toStringAsFixed(0)}%',
+                '${(_badgeAssetIds.length / 8 * 100).toStringAsFixed(0)}%',
                 style: GoogleFonts.poppins(
                   fontSize: isVerySmallDevice ? 18 : isSmallDevice ? 20 : 24,
                   fontWeight: FontWeight.bold,
@@ -759,7 +786,7 @@ class _AchievementsPageState extends State<AchievementsPage>
     final isVerySmallDevice = screenWidth < 320;
     final padding = isVerySmallDevice ? 8.0 : isSmallDevice ? 10.0 : 14.0;
     final spacing = isVerySmallDevice ? 10.0 : isSmallDevice ? 12.0 : 16.0;
-    
+
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.all(padding),
@@ -780,9 +807,9 @@ class _AchievementsPageState extends State<AchievementsPage>
           ),
           const SizedBox(height: 10),
           ..._milestones.map((milestone) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: _buildMilestoneCard(milestone),
-          )),
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _buildMilestoneCard(milestone),
+              )),
           const SizedBox(height: 20),
         ],
       ),
@@ -793,7 +820,7 @@ class _AchievementsPageState extends State<AchievementsPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
-    
+
     return Container(
       padding: EdgeInsets.all(isVerySmallDevice ? 12 : isSmallDevice ? 14 : 16),
       decoration: BoxDecoration(
@@ -821,7 +848,7 @@ class _AchievementsPageState extends State<AchievementsPage>
           const SizedBox(height: 12),
           _buildProgressItem('Quizzes', _totalQuizzes, 8, Colors.blue),
           const SizedBox(height: 10),
-          _buildProgressItem('Badges', _badges.length, 8, Colors.purple),
+          _buildProgressItem('Badges', _badgeAssetIds.length, 8, Colors.purple),
           const SizedBox(height: 10),
           _buildProgressItem('Milestones', _milestones.where((m) => m['completed']).length, 5, Colors.green),
         ],
@@ -832,7 +859,7 @@ class _AchievementsPageState extends State<AchievementsPage>
   Widget _buildProgressItem(String title, int current, int total, Color color) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isVerySmallDevice = screenWidth < 320;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -875,10 +902,10 @@ class _AchievementsPageState extends State<AchievementsPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
-    
+
     int nextLevelQuizzes = 0;
     String nextLevel = '';
-    
+
     if (_totalQuizzes < 2) {
       nextLevelQuizzes = 2;
       nextLevel = 'Learner';
@@ -984,7 +1011,7 @@ class _AchievementsPageState extends State<AchievementsPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
-    
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -1001,9 +1028,7 @@ class _AchievementsPageState extends State<AchievementsPage>
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: milestone['completed'] 
-                  ? Colors.green[100] 
-                  : Colors.grey[100],
+              color: milestone['completed'] ? Colors.green[100] : Colors.grey[100],
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -1023,15 +1048,11 @@ class _AchievementsPageState extends State<AchievementsPage>
                   style: GoogleFonts.poppins(
                     fontSize: isVerySmallDevice ? 11 : 12,
                     fontWeight: FontWeight.w600,
-                    color: milestone['completed'] 
-                        ? Colors.green[800] 
-                        : Colors.grey[800],
+                    color: milestone['completed'] ? Colors.green[800] : Colors.grey[800],
                   ),
                 ),
                 Text(
-                  milestone['completed'] 
-                      ? 'Done!' 
-                      : '${milestone['required']} quiz',
+                  milestone['completed'] ? 'Done!' : '${milestone['required']} quiz',
                   style: GoogleFonts.poppins(
                     fontSize: isVerySmallDevice ? 9 : 10,
                     color: Colors.grey[600],
@@ -1041,9 +1062,7 @@ class _AchievementsPageState extends State<AchievementsPage>
             ),
           ),
           if (milestone['completed'])
-            Icon(Icons.check_circle, 
-              color: Colors.green[600], 
-              size: 20),
+            Icon(Icons.check_circle, color: Colors.green[600], size: 20),
         ],
       ),
     );
@@ -1053,7 +1072,7 @@ class _AchievementsPageState extends State<AchievementsPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
-    
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
@@ -1099,7 +1118,7 @@ class _AchievementsPageState extends State<AchievementsPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
-    
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -1111,9 +1130,7 @@ class _AchievementsPageState extends State<AchievementsPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.emoji_events, 
-              size: 48, 
-              color: Colors.grey[400]),
+            Icon(Icons.emoji_events, size: 48, color: Colors.grey[400]),
             const SizedBox(height: 10),
             Text(
               'No badges yet',
@@ -1140,7 +1157,7 @@ class _AchievementsPageState extends State<AchievementsPage>
   Widget _buildEarnedBadgesGrid() {
     final screenWidth = MediaQuery.of(context).size.width;
     final isVerySmallDevice = screenWidth < 320;
-    
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -1150,45 +1167,41 @@ class _AchievementsPageState extends State<AchievementsPage>
         crossAxisSpacing: 8,
         childAspectRatio: 1,
       ),
-      itemCount: _badges.length,
+      itemCount: _badgeAssetIds.length,
       itemBuilder: (context, index) {
-        final badgeId = _badges[index];
-        final badge = _allBadges.firstWhere(
-          (b) => b['id'] == badgeId,
-          orElse: () => {'id': badgeId, 'name': badgeId, 'icon': Icons.star, 'color': Colors.grey},
-        );
-        return _buildEarnedBadgeTile(badge);
+        final id = _badgeAssetIds[index];
+        return _buildBadgeImageTile(id, earned: true);
       },
     );
   }
 
-  Widget _buildEarnedBadgeTile(Map<String, dynamic> badge) {
+  Widget _buildBadgeImageTile(String id, {required bool earned}) {
     return Container(
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            (badge['color'] as Color).withOpacity(0.1),
-            (badge['color'] as Color).withOpacity(0.2),
+            Colors.white.withOpacity(0.1),
+            Colors.white.withOpacity(0.2),
           ],
         ),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: (badge['color'] as Color).withOpacity(0.3),
+          color: earned ? Colors.purple : Colors.grey[300]!,
           width: 1.5,
         ),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            badge['icon'],
-            size: 20,
-            color: badge['color'],
+          Image.asset(
+            'assets/images/$id.png',
+            width: 40,
+            height: 40,
           ),
           const SizedBox(height: 2),
           Text(
-            badge['name'],
+            _idToPrettyName[id] ?? id,
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 8,
@@ -1207,7 +1220,7 @@ class _AchievementsPageState extends State<AchievementsPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallDevice = screenWidth < 360;
     final isVerySmallDevice = screenWidth < 320;
-    
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -1220,7 +1233,7 @@ class _AchievementsPageState extends State<AchievementsPage>
       itemCount: _allBadges.length,
       itemBuilder: (context, index) {
         final badge = _allBadges[index];
-        final isEarned = _badges.contains(badge['id']);
+        final isEarned = _badgeAssetIds.contains(badge['id']);
         return _buildBadgeCard(badge, isEarned);
       },
     );
@@ -1229,7 +1242,7 @@ class _AchievementsPageState extends State<AchievementsPage>
   Widget _buildBadgeCard(Map<String, dynamic> badge, bool isEarned) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isVerySmallDevice = screenWidth < 320;
-    
+
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -1291,9 +1304,7 @@ class _AchievementsPageState extends State<AchievementsPage>
             overflow: TextOverflow.ellipsis,
           ),
           if (isEarned)
-            const Icon(Icons.check_circle, 
-              color: Colors.green, 
-              size: 12),
+            const Icon(Icons.check_circle, color: Colors.green, size: 12),
         ],
       ),
     );

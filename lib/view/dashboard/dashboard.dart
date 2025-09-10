@@ -440,7 +440,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    'NEXTGEN LEARNERS',
+                                    'BrainZy',
                                     style: GoogleFonts.fredoka(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 20,
@@ -831,7 +831,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'NextGen Learners',
+                      'BrainZy',
                       style: GoogleFonts.poppins(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
