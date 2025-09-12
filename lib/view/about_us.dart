@@ -1,8 +1,4 @@
 import 'package:nextgen_learners/constant/import_export.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class AboutUsPage extends StatefulWidget {
   const AboutUsPage({Key? key}) : super(key: key);
@@ -17,6 +13,8 @@ class _AboutUsPageState extends State<AboutUsPage>
   late AnimationController _floatController;
   late Animation<double> _logoAnimation;
   late Animation<double> _floatAnimation;
+  late AnimationController _bounceController;
+  late Animation<double> _bounceAnimation;
 
   @override
   void initState() {
@@ -31,6 +29,11 @@ class _AboutUsPageState extends State<AboutUsPage>
       vsync: this,
     )..repeat(reverse: true);
 
+    _bounceController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..repeat(reverse: true);
+
     _logoAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
       CurvedAnimation(parent: _logoController, curve: Curves.easeInOut),
     );
@@ -38,12 +41,17 @@ class _AboutUsPageState extends State<AboutUsPage>
     _floatAnimation = Tween<double>(begin: -10, end: 10).animate(
       CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
     );
+
+    _bounceAnimation = Tween<double>(begin: 0.98, end: 1.02).animate(
+      CurvedAnimation(parent: _bounceController, curve: Curves.easeInOut),
+    );
   }
 
   @override
   void dispose() {
     _logoController.dispose();
     _floatController.dispose();
+    _bounceController.dispose();
     super.dispose();
   }
 
@@ -374,28 +382,20 @@ class _AboutUsPageState extends State<AboutUsPage>
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    // Quick Actions with enhanced design
-                    _buildEnhancedQuickActions(),
-                    const SizedBox(height: 30),
-
-                    // About Section with animation
-                    _buildAboutSection(),
-                    const SizedBox(height: 30),
-
-                    // Features Grid with better spacing
-                    _buildFeaturesSection(),
-                    const SizedBox(height: 30),
-
-                    // Team Section with cards
+                    // Amazing Team Section
                     _buildTeamSection(),
                     const SizedBox(height: 30),
 
-                    // Contact & Social Section
+                    // About ASWDC Section
+                    _buildAboutASWDC(),
+                    const SizedBox(height: 30),
+
+                    // Contact Section
                     _buildContactSection(),
                     const SizedBox(height: 30),
 
-                    // Social Media Links
-                    _buildSocialMediaSection(),
+                    // Quick Actions Section
+                    _buildEnhancedQuickActions(),
                     const SizedBox(height: 30),
 
                     // Footer with animation
@@ -550,9 +550,6 @@ class _AboutUsPageState extends State<AboutUsPage>
       ),
     );
   }
-
-  // Continue with the rest of your existing methods...
-  // (I've kept them the same but you can apply similar enhancements)
 
   Widget _buildAboutSection() {
     return Container(
@@ -733,7 +730,7 @@ class _AboutUsPageState extends State<AboutUsPage>
                   ],
                 ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // ✅ Prevents overflow
+                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
@@ -743,7 +740,6 @@ class _AboutUsPageState extends State<AboutUsPage>
                     ),
                     const SizedBox(height: 8),
                     Flexible(
-                      // ✅ Handles long text wrapping
                       child: Text(
                         feature['title'] as String,
                         textAlign: TextAlign.center,
@@ -1077,37 +1073,6 @@ class _AboutUsPageState extends State<AboutUsPage>
             ],
           ),
           const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildSocialButton(
-                icon: FontAwesomeIcons.linkedin,
-                color: Colors.blue.shade700,
-                onTap:
-                    () => _openSocialMedia(
-                      'https://www.linkedin.com/in/harshil-solanki-020378288/',
-                    ),
-              ),
-              _buildSocialButton(
-                icon: FontAwesomeIcons.instagram,
-                gradient: [Colors.purple, Colors.pink, Colors.orange],
-                onTap:
-                    () => _openSocialMedia(
-                      'https://www.instagram.com/harshil_2677/?next=%2F',
-                    ),
-              ),
-              _buildSocialButton(
-                icon: FontAwesomeIcons.twitter,
-                color: Colors.blue.shade400,
-                onTap: () => _openSocialMedia('https://x.com/?lang=en-in'),
-              ),
-              _buildSocialButton(
-                icon: FontAwesomeIcons.github,
-                color: Colors.grey.shade800,
-                onTap: () => _openSocialMedia('https://github.com/26harshil'),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -1234,6 +1199,194 @@ class _AboutUsPageState extends State<AboutUsPage>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAboutASWDC() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Enhanced Logo Section
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xFFFFFFFF), // Pure white
+                Color(0xFFFFFFFF), // Soft cream (light yellowish)
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 90,
+                height: 90,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 15,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    'assets/home_screen/ASWC.png',
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Center(
+                        child: Text(
+                          'ASWDC',
+                          style: TextStyle(
+                            color: Color(0xFF6366f1),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Container(
+                  height: 90,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 15,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      'assets/home_screen/du_logo.png',
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Center(
+                          child: Icon(
+                            Icons.school_rounded,
+                            color: Color(0xFF6366f1),
+                            size: 40,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 28),
+        ShaderMask(
+          shaderCallback:
+              (bounds) => const LinearGradient(
+                colors: [Color(0xFF6366f1), Color(0xFF8b5cf6)],
+              ).createShader(bounds),
+          child: const Text(
+            'About ASWDC',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: -0.3,
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6366f1), Color(0xFF8b5cf6)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6366f1).withOpacity(0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: const Text(
+            'ASWDC is the Application, Software and Website Development Center at Darshan Engineering College, operated by students and faculty of the Computer Engineering Department.',
+            style: TextStyle(
+              fontSize: 17,
+              color: Colors.white,
+              height: 1.6,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.2,
+            ),
+            textAlign: TextAlign.justify,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: const Color(0xFFf8fafc),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFF6366f1).withOpacity(0.1)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366f1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const SizedBox.shrink(), // Placeholder for icon
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Our Mission',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1f2937),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Bridge the gap between university curriculum and industry demands. Students learn cutting-edge technologies, develop real-world applications, and gain professional experience under the guidance of industry experts and faculty members.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF374151),
+                  height: 1.6,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.justify,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,5 +1,5 @@
-import 'package:get/get.dart';
-import 'package:nextgen_learners/api/api_services.dart';
+
+import 'package:nextgen_learners/constant/import_export.dart';
 
 class DashboardController extends GetxController {
   var colors = <Map<String, dynamic>>[].obs;

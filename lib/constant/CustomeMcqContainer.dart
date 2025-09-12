@@ -1,12 +1,10 @@
-import 'package:nextgen_learners/constant/import_export.dart' hide AudioPlayer;
-import 'package:audioplayers/audioplayers.dart';
-import 'package:nextgen_learners/services/api_config.dart';
-import 'dart:typed_data';
+import 'package:nextgen_learners/constant/import_export.dart';
 
 class CustomMCQWidget extends StatefulWidget {
   final List<Map<String, dynamic>> questions;
   final String quizTitle;
   final String quizId;
+  // Added theme parameter
   final void Function(dynamic questionId, bool isCorrect)? onAnswerSubmitted;
 
   const CustomMCQWidget({
@@ -14,6 +12,7 @@ class CustomMCQWidget extends StatefulWidget {
     required this.questions,
     required this.quizTitle,
     required this.quizId,
+    // Required theme parameter
     this.onAnswerSubmitted,
   });
 
@@ -35,9 +34,6 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   Set<int> viewedQuestions = {};
 
   // Audio
-  late final AudioPlayer _audioPlayer;
-  bool _isPlaying = false;
-  bool _isLoadingSound = false;
 
   late AnimationController _pulseController;
   late AnimationController _slideController;
@@ -46,11 +42,12 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   late Animation<Offset> _slideAnimation;
   late Animation<double> _scaleAnimation;
 
+  // Theme gradients and text colors
+
   @override
   void initState() {
     super.initState();
     _setupAnimations();
-    _initAudio();
     _loadProgress();
     viewedQuestions.add(0);
   }
@@ -91,64 +88,8 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
     _pulseController.repeat(reverse: true);
   }
 
-  void _initAudio() {
-    _audioPlayer = AudioPlayer();
-    _audioPlayer.onPlayerStateChanged.listen((state) {
-      if (!mounted) return;
-      setState(() {
-        _isPlaying = state == PlayerState.playing;
-      });
-    });
-  }
-
-  Future<void> _playOrStopSound() async {
-    final questionData = widget.questions[currentQuestionIndex];
-    final Uint8List? soundBytes = questionData['soundDataBytes'] as Uint8List?;
-    final String soundUrl =
-        (questionData['soundUrl'] ?? questionData['sound'] ?? '').toString();
-
-    if (_isPlaying) {
-      await _stopAudio();
-    } else {
-      setState(() {
-        _isLoadingSound = true;
-      });
-      try {
-        if (soundBytes != null && soundBytes.isNotEmpty) {
-          await _audioPlayer.play(BytesSource(soundBytes));
-        } else if (soundUrl.isNotEmpty) {
-          await _audioPlayer.play(UrlSource(soundUrl));
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error playing sound: $e')));
-        }
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoadingSound = false;
-          });
-        }
-      }
-    }
-  }
-
-  Future<void> _stopAudio() async {
-    try {
-      await _audioPlayer.stop();
-    } catch (_) {}
-  }
-
   @override
   void dispose() {
-    try {
-      _audioPlayer.stop();
-    } catch (_) {}
-    try {
-      _audioPlayer.dispose();
-    } catch (_) {}
     _pulseController.dispose();
     _slideController.dispose();
     _scaleController.dispose();
@@ -156,8 +97,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   }
 
   void selectAnswer(String answer) {
-    if (userAnswers.containsKey(currentQuestionIndex))
-      return; // Already answered
+    if (userAnswers.containsKey(currentQuestionIndex)) return;
     setState(() {
       selectedAnswer = answer;
     });
@@ -275,7 +215,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                       style: GoogleFonts.poppins(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
-                        color: Colors.purple[800],
+                        color: Colors.black,
                       ),
                     ),
                   ),
@@ -301,8 +241,8 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                       borderRadius: BorderRadius.circular(12),
                     ),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
+                      horizontal: 16,
+                      vertical: 8,
                     ),
                   ),
                   child: Text(
@@ -334,7 +274,6 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
       return;
     }
 
-    await _stopAudio();
     setState(() {
       currentQuestionIndex++;
       viewedQuestions.add(currentQuestionIndex);
@@ -350,8 +289,6 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
 
   void _previousQuestion() async {
     if (currentQuestionIndex <= 0) return;
-
-    await _stopAudio();
     setState(() {
       currentQuestionIndex--;
       selectedAnswer = userAnswers[currentQuestionIndex];
@@ -361,15 +298,14 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
       _scaleController.reset();
       _startAnimations();
     });
+    _saveProgress();
   }
 
   void _checkQuizCompletion() async {
-    // Check if all questions are answered
     if (userAnswers.length == widget.questions.length) {
       await _markCompleted();
       Get.off(() => Dashboard(totalPoints: points));
     } else {
-      // Show message that there are unanswered questions
       _showIncompleteQuizDialog();
     }
   }
@@ -394,7 +330,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
               style: GoogleFonts.poppins(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: Colors.purple[800],
+                color: Colors.black,
               ),
             ),
             content: Text(
@@ -440,6 +376,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.purple[600],
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -516,16 +453,15 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   Widget build(BuildContext context) {
     return Theme(
       data: ThemeData(
-        primaryColor: Colors.purple[700],
+        primaryColor: Colors.blue[700],
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.purple,
-          primary: Colors.purple[600],
-          secondary: Colors.cyan[400],
+          seedColor: Colors.blue,
+          primary: Colors.blue[600],
+          secondary: Colors.orange[400],
           surface: Colors.white,
         ),
       ),
       child: Scaffold(
-        extendBodyBehindAppBar: true,
         appBar: _buildEnhancedAppBar(context),
         body:
             widget.questions.isEmpty
@@ -536,76 +472,67 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Colors.purple[100]!,
-                        Colors.pink[100]!,
-                        Colors.cyan[50]!,
-                        Colors.purple[50]!,
+                        Colors.blue[100]!,
+                        Colors.green[100]!,
+                        Colors.orange[50]!,
+                        Colors.blue[50]!,
                       ],
                       stops: const [0.0, 0.3, 0.7, 1.0],
                     ),
                   ),
-                  child: SafeArea(
-                    child: SlideTransition(
-                      position: _slideAnimation,
-                      child: Column(
-                        children: [
-                          // Fixed header section
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                            child: Column(
-                              children: [
-                                _buildQuestionNavigator(),
-                                const SizedBox(height: 12),
-                                // _buildProgressIndicator(),
-                                // const SizedBox(height: 12),
-                                _buildPointsDisplay(),
-                                const SizedBox(height: 12),
-                              ],
-                            ),
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                          child: Column(
+                            children: [
+                              _buildQuestionNavigator(),
+                              const SizedBox(height: 12),
+                              _buildPointsDisplay(),
+                              const SizedBox(height: 12),
+                            ],
                           ),
-
-                          // Scrollable content
-                          Expanded(
-                            child: SingleChildScrollView(
-                              physics: const BouncingScrollPhysics(),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                ),
-                                child: Column(
-                                  children: [
-                                    const SizedBox(height: 10),
-                                    _buildQuestionCard(),
+                        ),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              child: Column(
+                                children: [
+                                  const SizedBox(height: 10),
+                                  _buildQuestionCard(),
+                                  const SizedBox(height: 16),
+                                  if (showHint) ...[
+                                    _buildHintCard(),
                                     const SizedBox(height: 16),
-                                    if (showHint) ...[
-                                      _buildHintCard(),
-                                      const SizedBox(height: 16),
-                                    ],
-                                    _buildAnswerOptions(),
-                                    const SizedBox(height: 20),
                                   ],
-                                ),
+                                  _buildAnswerOptions(),
+                                  const SizedBox(height: 20),
+                                ],
                               ),
                             ),
                           ),
-
-                          // Fixed bottom action buttons
-                          Container(
-                            padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.9),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, -5),
-                                ),
-                              ],
-                            ),
-                            child: _buildActionButtons(),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.9),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, -5),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                          child: _buildActionButtons(),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -616,17 +543,15 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   PreferredSizeWidget _buildEnhancedAppBar(BuildContext context) {
     return AppBar(
       leading: Tooltip(
-        message: 'Back to previous screen',
+        message: 'Back to Dashboard',
         child: Container(
-          margin: const EdgeInsets.all(8),
+          margin: EdgeInsets.zero,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.purple[600]!, Colors.purple[400]!],
-            ),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.purple.withOpacity(0.3),
+                color: Colors.black.withOpacity(0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -635,11 +560,14 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => Get.back(),
+              onTap:
+                  () => Get.off(
+                    () => Dashboard(totalPoints: points),
+                  ),
               borderRadius: BorderRadius.circular(16),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_back_ios_new,
-                color: Colors.white,
+                color: Colors.black,
                 size: 20,
               ),
             ),
@@ -650,7 +578,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
@@ -662,27 +590,21 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
             ),
             child: Image.asset(
               'assets/home_screen/buddy.png',
-              height: 28,
-              width: 28,
+              height: 24,
+              width: 24,
               fit: BoxFit.contain,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Expanded(
-            child: ShaderMask(
-              shaderCallback:
-                  (bounds) => LinearGradient(
-                colors: [Colors.white, Colors.white.withOpacity(0.8)],
-              ).createShader(bounds),
-              child: Text(
-                widget.quizTitle,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.poppins(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  letterSpacing: 1.0,
-                ),
+            child: Text(
+              widget.quizTitle,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: Colors.black,
+                letterSpacing: 1.0,
               ),
             ),
           ),
@@ -690,60 +612,21 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
       ),
       centerTitle: true,
       backgroundColor: Colors.transparent,
-      elevation: 0,
       flexibleSpace: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
             colors: [
-              Colors.purple[400]!.withOpacity(0.9),
-              Colors.cyan[300]!.withOpacity(0.9),
+              Colors.blue[100]!,
+              Colors.green[100]!,
+              Colors.orange[50]!,
+              Colors.blue[50]!,
             ],
           ),
         ),
       ),
+      elevation: 0,
     );
   }
-
-  // Widget _buildProgressIndicator() {
-  //   return Container(
-  //     width: double.infinity,
-  //     padding: const EdgeInsets.all(16),
-  //     decoration: BoxDecoration(
-  //       gradient: LinearGradient(
-  //         colors: [
-  //           Colors.white.withOpacity(0.2),
-  //           Colors.white.withOpacity(0.1),
-  //         ],
-  //       ),
-  //       borderRadius: BorderRadius.circular(20),
-  //       border: Border.all(color: Colors.white.withOpacity(0.3)),
-  //     ),
-  //     child: Column(
-  //       children: [
-  //         Text(
-  //           'Question ${currentQuestionIndex + 1} of ${widget.questions.length}',
-  //           style: GoogleFonts.poppins(
-  //             fontSize: 16,
-  //             fontWeight: FontWeight.w600,
-  //             color: Colors.purple[800],
-  //           ),
-  //         ),
-  //         const SizedBox(height: 8),
-  //         ClipRRect(
-  //           borderRadius: BorderRadius.circular(10),
-  //           child: LinearProgressIndicator(
-  //             value: (currentQuestionIndex + 1) / widget.questions.length,
-  //             backgroundColor: Colors.white.withOpacity(0.3),
-  //             valueColor: AlwaysStoppedAnimation<Color>(Colors.purple[400]!),
-  //             minHeight: 8,
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   Widget _buildQuestionNavigator() {
     return Container(
@@ -761,7 +644,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
           IconData? icon;
 
           if (isCurrent) {
-            bgColor = Colors.purple[600]!;
+            bgColor = Colors.blue[600]!;
           } else if (isAnswered) {
             bgColor = isCorrect ? Colors.green[500]! : Colors.red[500]!;
             icon = isCorrect ? Icons.check : Icons.close;
@@ -809,7 +692,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                           : Text(
                             '${index + 1}',
                             style: GoogleFonts.poppins(
-                              color: Colors.white,
+                              color: Colors.black,
                               fontWeight: FontWeight.bold,
                               fontSize: isCurrent ? 16 : 14,
                             ),
@@ -832,12 +715,12 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.amber[300]!, Colors.orange[300]!],
+              colors: [Colors.orange[300]!, Colors.yellow[300]!],
             ),
             borderRadius: BorderRadius.circular(25),
             boxShadow: [
               BoxShadow(
-                color: Colors.amber.withOpacity(0.4),
+                color: Colors.black.withOpacity(0.4),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
@@ -846,14 +729,18 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.star, color: Colors.white, size: 22),
+              Icon(
+                Icons.star,
+                color: Colors.black,
+                size: 22,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Points: $value',
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  color: Colors.black,
                 ),
               ),
             ],
@@ -869,11 +756,6 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
         questionData['imageUrl'] as String? ??
         questionData['image'] as String? ??
         questionData['imagePath'] as String?;
-    final Uint8List? soundBytes = questionData['soundDataBytes'] as Uint8List?;
-    final String soundUrl =
-        (questionData['soundUrl'] ?? questionData['sound'] ?? '').toString();
-    final bool hasSound =
-        (soundBytes != null && soundBytes.isNotEmpty) || soundUrl.isNotEmpty;
 
     final String normalizedImage = (imagePath ?? '').trim();
     String? networkImageUrl;
@@ -898,160 +780,222 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.purple.withOpacity(0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
         ],
-        border: Border.all(color: Colors.purple.withOpacity(0.1), width: 2),
+        border: Border.all(color: Colors.black.withOpacity(0.1), width: 2),
       ),
       child: Column(
         children: [
-          if (normalizedImage.isNotEmpty)
-            Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child:
-                    networkImageUrl != null
-                        ? Image.network(
-                          networkImageUrl,
-                          height: 120,
-                          width: double.infinity,
-                          fit: BoxFit.contain,
-                          errorBuilder:
-                              (context, error, stackTrace) => Container(
-                                height: 120,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[200],
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.image_not_supported,
-                                  color: Colors.grey[400],
-                                  size: 40,
-                                ),
-                              ),
-                        )
-                        : Image.asset(
-                          normalizedImage,
-                          height: 120,
-                          width: double.infinity,
-                          fit: BoxFit.contain,
-                          errorBuilder:
-                              (context, error, stackTrace) => Container(
-                                height: 120,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[200],
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.image_not_supported,
-                                  color: Colors.grey[400],
-                                  size: 40,
-                                ),
-                              ),
-                        ),
-              ),
-            ),
           Text(
             (questionData['questionText'] ?? questionData['question'] ?? '')
                 .toString(),
             style: GoogleFonts.poppins(
               fontSize: 22,
               fontWeight: FontWeight.w700,
-              color: Colors.purple[800],
+              color: Colors.black,
               height: 1.3,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
-          if (hasSound)
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isLoadingSound ? null : _playOrStopSound,
-                icon:
-                    _isLoadingSound
-                        ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                        : Icon(
-                          _isPlaying ? Icons.stop_circle : Icons.volume_up,
-                        ),
-                label: Text(_isPlaying ? 'Stop Sound' : 'Play Sound'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple[500],
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-              ),
-            ),
         ],
       ),
     );
   }
 
   Widget _buildHintCard() {
+    final questionData = widget.questions[currentQuestionIndex];
+    final hintText = questionData['hint'] as String? ?? 'Keep trying!';
+    final imagePath =
+        questionData['imageUrl'] as String? ??
+        questionData['image'] as String? ??
+        questionData['imagePath'] as String?;
+    final hintImage =
+        questionData['hintImage'] as String? ??
+        questionData['hintImageUrl'] as String? ??
+        questionData['hintImagePath'] as String?;
+
+    final String normalizedImage = (imagePath ?? '').trim();
+    final String normalizedHintImage = (hintImage ?? '').trim();
+    String? networkImageUrl;
+    String? networkHintImageUrl;
+    if (normalizedImage.isNotEmpty) {
+      if (normalizedImage.startsWith('http') ||
+          normalizedImage.startsWith('data:')) {
+        networkImageUrl = normalizedImage;
+      } else if (normalizedImage.startsWith('/')) {
+        networkImageUrl = ApiConfig.baseHost + normalizedImage.substring(1);
+      } else if (!normalizedImage.startsWith('assets/')) {
+        networkImageUrl = ApiConfig.baseHost + normalizedImage;
+      }
+    }
+    if (normalizedHintImage.isNotEmpty) {
+      if (normalizedHintImage.startsWith('http') ||
+          normalizedHintImage.startsWith('data:')) {
+        networkHintImageUrl = normalizedHintImage;
+      } else if (normalizedHintImage.startsWith('/')) {
+        networkHintImageUrl =
+            ApiConfig.baseHost + normalizedHintImage.substring(1);
+      } else if (!normalizedHintImage.startsWith('assets/')) {
+        networkHintImageUrl = ApiConfig.baseHost + normalizedHintImage;
+      }
+    }
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.yellow[100]!, Colors.amber[50]!],
+          colors: [
+            Colors.yellow[100]!.withOpacity(0.8),
+            Colors.orange[50]!.withOpacity(0.8),
+          ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.amber[300]!, width: 1.5),
+        border: Border.all(color: Colors.orange[300]!, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.amber.withOpacity(0.2),
+            color: Colors.orange.withOpacity(0.2),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.amber[200],
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.lightbulb, color: Colors.amber[800], size: 20),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.orange[200],
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.lightbulb,
+                  color: Colors.orange[800],
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  hintText,
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black,
+                    height: 1.3,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              (widget.questions[currentQuestionIndex]['hint'] as String? ??
-                  'Keep trying!'),
-              style: GoogleFonts.poppins(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: Colors.amber[800],
-                height: 1.3,
+          if (showHint &&
+              (normalizedImage.isNotEmpty || normalizedHintImage.isNotEmpty))
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child:
+                      (normalizedHintImage.isNotEmpty
+                          ? (networkHintImageUrl != null
+                              ? Image.network(
+                                networkHintImageUrl,
+                                height: 100,
+                                width: double.infinity,
+                                fit: BoxFit.contain,
+                                errorBuilder:
+                                    (context, error, stackTrace) => Container(
+                                      height: 100,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[200],
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        Icons.image_not_supported,
+                                        color: Colors.grey[400],
+                                        size: 40,
+                                      ),
+                                    ),
+                              )
+                              : Image.asset(
+                                normalizedHintImage,
+                                height: 100,
+                                width: double.infinity,
+                                fit: BoxFit.contain,
+                                errorBuilder:
+                                    (context, error, stackTrace) => Container(
+                                      height: 100,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[200],
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        Icons.image_not_supported,
+                                        color: Colors.grey[400],
+                                        size: 40,
+                                      ),
+                                    ),
+                              ))
+                          : (networkImageUrl != null
+                              ? Image.network(
+                                networkImageUrl,
+                                height: 100,
+                                width: double.infinity,
+                                fit: BoxFit.contain,
+                                errorBuilder:
+                                    (context, error, stackTrace) => Container(
+                                      height: 100,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[200],
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        Icons.image_not_supported,
+                                        color: Colors.grey[400],
+                                        size: 40,
+                                      ),
+                                    ),
+                              )
+                              : Image.asset(
+                                normalizedImage,
+                                height: 100,
+                                width: double.infinity,
+                                fit: BoxFit.contain,
+                                errorBuilder:
+                                    (context, error, stackTrace) => Container(
+                                      height: 100,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[200],
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        Icons.image_not_supported,
+                                        color: Colors.grey[400],
+                                        size: 40,
+                                      ),
+                                    ),
+                              ))),
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -1115,7 +1059,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
               }
             } else {
               buttonColor =
-                  isSelected ? Colors.purple[500]! : Colors.blue[400]!;
+                  isSelected ? Colors.blue[500]! : Colors.orange[400]!;
             }
 
             return TweenAnimationBuilder(
@@ -1159,7 +1103,11 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 if (icon != null)
-                                  Icon(icon, color: Colors.white, size: 22),
+                                  Icon(
+                                    icon,
+                                    color: Colors.white,
+                                    size: 22,
+                                  ),
                                 if (icon != null) const SizedBox(height: 6),
                                 Flexible(
                                   child: Text(
@@ -1167,7 +1115,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                                     style: GoogleFonts.poppins(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.white,
+                                      color: Colors.black,
                                       height: 1.2,
                                     ),
                                     textAlign: TextAlign.center,
@@ -1195,7 +1143,6 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Previous Question Button
         Expanded(
           child: Padding(
             padding: const EdgeInsets.only(right: 8),
@@ -1204,26 +1151,33 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
               style: ElevatedButton.styleFrom(
                 backgroundColor:
                     currentQuestionIndex > 0
-                        ? Colors.purple[600]
+                        ? Colors.blue[600]
                         : Colors.grey[400],
-                foregroundColor: Colors.white,
+                foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 12,
+                ),
                 elevation: currentQuestionIndex > 0 ? 5 : 0,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.arrow_back, size: 20, color: Colors.white),
-                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.arrow_back,
+                    size: 18,
+                    color: Colors.black,
+                  ),
+                  const SizedBox(width: 4),
                   Text(
                     'Previous',
                     style: GoogleFonts.poppins(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: Colors.black,
                     ),
                   ),
                 ],
@@ -1231,36 +1185,45 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
             ),
           ),
         ),
-        // Hint Button
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: ElevatedButton(
               onPressed: toggleHint,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber[600],
-                foregroundColor: Colors.white,
+                backgroundColor: Colors.orange[600],
+                foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 12,
+                ),
                 elevation: 5,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    showHint ? Icons.lightbulb_outline : Icons.lightbulb,
-                    size: 20,
-                    color: Colors.white,
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[200],
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      showHint ? Icons.lightbulb_outline : Icons.lightbulb,
+                      size: 18,
+                      color: Colors.black,
+                    ),
                   ),
-                  const SizedBox(width: 2),
+                  const SizedBox(width: 10),
                   Text(
-                    showHint ? 'Hide Hint' : 'Show Hint',
+                    'Hint',
                     style: GoogleFonts.poppins(
-                      fontSize: 14,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: Colors.black,
                     ),
                   ),
                 ],
@@ -1268,7 +1231,6 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
             ),
           ),
         ),
-        // Next/Submit Button
         Expanded(
           child: Padding(
             padding: const EdgeInsets.only(left: 8),
@@ -1283,13 +1245,16 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                 backgroundColor:
                     userAnswers.containsKey(currentQuestionIndex) ||
                             selectedAnswer != null
-                        ? Colors.purple[600]
+                        ? Colors.blue[600]
                         : Colors.grey[400],
-                foregroundColor: Colors.white,
+                foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 12,
+                ),
                 elevation:
                     userAnswers.containsKey(currentQuestionIndex) ||
                             selectedAnswer != null
@@ -1304,13 +1269,17 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                         ? 'Next'
                         : 'Submit',
                     style: GoogleFonts.poppins(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: Colors.black,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Icon(Icons.arrow_forward, size: 20, color: Colors.white),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward,
+                    size: 18,
+                    color: Colors.black,
+                  ),
                 ],
               ),
             ),

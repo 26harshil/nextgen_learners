@@ -1,8 +1,11 @@
 import 'package:nextgen_learners/constant/import_export.dart';
-import 'package:nextgen_learners/controller/dashboard_controller.dart';
-import 'package:nextgen_learners/view/quizz_view.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   runApp(const MyApp());
 }
 
@@ -36,27 +39,29 @@ class MyApp extends StatelessWidget {
         ),
         GetPage(
           name: COLORS_Screen,
-          page: () => const QuizScreen(quizId: 'colors'),
+          page: () => const QuizScreen(quizId: 'colors',),
         ),
         GetPage(
           name: FRUITS_SCREEN,
-          page: () => const QuizScreen(quizId: 'fruits'),
+          page: () => const QuizScreen(quizId: 'fruits', ),
         ),
         GetPage(
           name: VEGETABLES_SCREEN,
-          page: () => const QuizScreen(quizId: 'vegetables'),
+          page:
+              () => const QuizScreen(quizId: 'vegetables', ),
         ),
         GetPage(
           name: VEHICLE_NAME_SCREEN,
-          page: () => const QuizScreen(quizId: 'vehicles'),
+          page: () => const QuizScreen(quizId: 'vehicles', ),
         ),
         GetPage(
           name: MATH_SCREEN,
-          page: () => const QuizScreen(quizId: 'math'),
+          page: () => const QuizScreen(quizId: 'math', ),
         ),
         GetPage(
           name: ANIMAL_Name_SCREEN,
-          page: () => const QuizScreen(quizId: 'animalname'),
+          page:
+              () => const QuizScreen(quizId: 'animalname', ),
         ),
         GetPage(
           name: ANIMAL_SOUND_SCREEN,
@@ -70,7 +75,7 @@ class MyApp extends StatelessWidget {
         ),
         GetPage(
           name: BIRDS_SCREEN,
-          page: () => const QuizScreen(quizId: 'birds'),
+          page: () => const QuizScreen(quizId: 'birds', ),
         ),
       ],
     );

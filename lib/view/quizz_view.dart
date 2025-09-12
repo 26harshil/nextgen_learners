@@ -1,30 +1,24 @@
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:nextgen_learners/constant/CustomeMcqContainer.dart';
-import 'package:nextgen_learners/constant/string_constant.dart';
-import 'package:nextgen_learners/services/api_config.dart';
-import 'package:nextgen_learners/services/quiz_service.dart';
+import 'package:nextgen_learners/constant/import_export.dart';
 
 class QuizScreen extends StatelessWidget {
   final String quizId;
+  // Added theme parameter
 
   const QuizScreen({super.key, required this.quizId});
 
-    Widget _gradientScaffold({required Widget child}) {
+  // Theme gradients and text colors (same as CustomMCQWidget for consistency)
+
+  Widget _gradientScaffold({required Widget child}) {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Colors.purple[50]!,
-              Colors.white,
-            ],
+            colors: [Colors.purple[50]!, Colors.white],
           ),
         ),
-        child: SafeArea(child: child),
+        child: Container(child: child),
       ),
     );
   }
@@ -57,9 +51,16 @@ class QuizScreen extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.redAccent),
+                  const Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.redAccent,
+                  ),
                   const SizedBox(height: 12),
-                  Text('Failed to load quiz.', style: GoogleFonts.fredoka(fontSize: 18)),
+                  Text(
+                    'Failed to load quiz.',
+                    style: GoogleFonts.fredoka(fontSize: 18),
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     '${snapshot.error}',
@@ -72,7 +73,6 @@ class QuizScreen extends StatelessWidget {
                     children: [
                       ElevatedButton(
                         onPressed: () {
-                          // Retry by navigating to the same route (rebuilds)
                           try {
                             final current = Get.currentRoute;
                             if (current.isNotEmpty) {
@@ -87,9 +87,9 @@ class QuizScreen extends StatelessWidget {
                       OutlinedButton(
                         onPressed: () => Get.offNamed(DASHBOARD_SCREEN),
                         child: const Text('Back'),
-                      )
+                      ),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),
@@ -114,9 +114,16 @@ class QuizScreen extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.info_outline, size: 64, color: Colors.blueAccent),
+                    const Icon(
+                      Icons.info_outline,
+                      size: 64,
+                      color: Colors.blueAccent,
+                    ),
                     const SizedBox(height: 12),
-                    Text('No questions available for this quiz.', style: GoogleFonts.fredoka(fontSize: 18)),
+                    Text(
+                      'No questions available for this quiz.',
+                      style: GoogleFonts.fredoka(fontSize: 18),
+                    ),
                     const SizedBox(height: 8),
                     ElevatedButton(
                       onPressed: () => Get.offNamed(DASHBOARD_SCREEN),
@@ -129,13 +136,14 @@ class QuizScreen extends StatelessWidget {
           );
         }
 
-        // Normal UI: keep original look by embedding inside Scaffold with same gradient
+        // Normal UI
         return _gradientScaffold(
           child: Center(
             child: CustomMCQWidget(
               questions: questions,
               quizTitle: quizId,
               quizId: quizId,
+              // Pass the theme to CustomMCQWidget
             ),
           ),
         );
