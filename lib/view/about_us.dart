@@ -14,7 +14,6 @@ class _AboutUsPageState extends State<AboutUsPage>
   late Animation<double> _logoAnimation;
   late Animation<double> _floatAnimation;
   late AnimationController _bounceController;
-  late Animation<double> _bounceAnimation;
 
   @override
   void initState() {
@@ -40,10 +39,6 @@ class _AboutUsPageState extends State<AboutUsPage>
 
     _floatAnimation = Tween<double>(begin: -10, end: 10).animate(
       CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
-    );
-
-    _bounceAnimation = Tween<double>(begin: 0.98, end: 1.02).animate(
-      CurvedAnimation(parent: _bounceController, curve: Curves.easeInOut),
     );
   }
 
@@ -103,14 +98,8 @@ class _AboutUsPageState extends State<AboutUsPage>
     await launchUrl(playStoreUri, mode: LaunchMode.externalApplication);
   }
 
-  Future<void> _openSocialMedia(String url) async {
-    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
       backgroundColor: Colors.purple.shade50,
       body: CustomScrollView(
@@ -551,218 +540,6 @@ class _AboutUsPageState extends State<AboutUsPage>
     );
   }
 
-  Widget _buildAboutSection() {
-    return Container(
-      padding: const EdgeInsets.all(26),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.purple.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.purple.shade400, Colors.pink.shade400],
-                  ),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Icon(
-                  Icons.info_outline_rounded,
-                  color: Colors.white,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Text(
-                'About Us',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.purple.shade800,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 22),
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.purple.shade50, Colors.pink.shade50],
-              ),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Text(
-              'BrainZy is a vibrant and engaging learning platform designed to make education fun for kids! Through interactive quizzes, colorful animations, and rewarding achievements, we transform learning into an exciting adventure.',
-              textAlign: TextAlign.justify,
-              style: TextStyle(
-                fontSize: 15,
-                height: 1.7,
-                color: Colors.grey.shade800,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.amber.shade50, Colors.orange.shade50],
-              ),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.orange.shade200, width: 2),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.lightbulb, color: Colors.orange.shade600, size: 30),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Our Mission',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange.shade800,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Making learning fun, interactive, and rewarding for every child!',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade700,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFeaturesSection() {
-    final features = [
-      {'icon': Icons.quiz, 'title': '8 Quizzes', 'color': Colors.blue},
-      {
-        'icon': Icons.emoji_events,
-        'title': 'Achievements',
-        'color': Colors.amber,
-      },
-      {'icon': Icons.volume_up, 'title': 'Sounds', 'color': Colors.green},
-      {'icon': Icons.lightbulb, 'title': 'Hints', 'color': Colors.orange},
-      {'icon': Icons.bar_chart, 'title': 'Progress', 'color': Colors.purple},
-      {'icon': Icons.star, 'title': 'Rewards', 'color': Colors.pink},
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(26),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.green.shade50, Colors.cyan.shade50],
-        ),
-        borderRadius: BorderRadius.circular(25),
-        border: Border.all(color: Colors.green.shade200, width: 2),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.star_rounded, color: Colors.green.shade600, size: 28),
-              const SizedBox(width: 10),
-              Text(
-                'Key Features',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green.shade800,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Icon(Icons.star_rounded, color: Colors.green.shade600, size: 28),
-            ],
-          ),
-          const SizedBox(height: 15),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: 18,
-              crossAxisSpacing: 18,
-              childAspectRatio: 1,
-            ),
-            itemCount: features.length,
-            itemBuilder: (context, index) {
-              final feature = features[index];
-              return Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (feature['color'] as Color).withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      feature['icon'] as IconData,
-                      color: feature['color'] as Color,
-                      size: 32,
-                    ),
-                    const SizedBox(height: 8),
-                    Flexible(
-                      child: Text(
-                        feature['title'] as String,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          overflow: TextOverflow.ellipsis,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade800,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildTeamSection() {
     return Container(
       padding: const EdgeInsets.all(26),
@@ -1041,79 +818,6 @@ class _AboutUsPageState extends State<AboutUsPage>
     );
   }
 
-  Widget _buildSocialMediaSection() {
-    return Container(
-      padding: const EdgeInsets.all(26),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.indigo.shade50, Colors.purple.shade50],
-        ),
-        borderRadius: BorderRadius.circular(25),
-        border: Border.all(color: Colors.indigo.shade200, width: 2),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FaIcon(
-                FontAwesomeIcons.hashtag,
-                color: Colors.indigo.shade600,
-                size: 24,
-              ),
-              const SizedBox(width: 10),
-              Text(
-                'Connect With Us',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.indigo.shade800,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSocialButton({
-    required IconData icon,
-    Color? color,
-    List<Color>? gradient,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(15),
-      child: Container(
-        width: 55,
-        height: 55,
-        decoration: BoxDecoration(
-          color: gradient == null ? color : null,
-          gradient:
-              gradient != null
-                  ? LinearGradient(
-                    colors: gradient,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                  : null,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: (color ?? gradient!.first).withOpacity(0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Center(child: FaIcon(icon, color: Colors.white, size: 24)),
-      ),
-    );
-  }
-
   Widget _buildFooter() {
     return Container(
       padding: const EdgeInsets.all(28),
@@ -1221,6 +925,40 @@ class _AboutUsPageState extends State<AboutUsPage>
           ),
           child: Row(
             children: [
+              Expanded(
+                child: Container(
+                  height: 90,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 15,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      'assets/home_screen/du_logo.png',
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Center(
+                          child: Icon(
+                            Icons.school_rounded,
+                            color: Color(0xFF6366f1),
+                            size: 40,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 20),
               Container(
                 width: 90,
                 height: 90,
@@ -1254,40 +992,6 @@ class _AboutUsPageState extends State<AboutUsPage>
                         ),
                       );
                     },
-                  ),
-                ),
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Container(
-                  height: 90,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
-                        blurRadius: 15,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      'assets/home_screen/du_logo.png',
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Center(
-                          child: Icon(
-                            Icons.school_rounded,
-                            color: Color(0xFF6366f1),
-                            size: 40,
-                          ),
-                        );
-                      },
-                    ),
                   ),
                 ),
               ),

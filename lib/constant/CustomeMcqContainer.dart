@@ -27,6 +27,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   String? selectedAnswer;
   bool showHint = false;
   bool isAnswerSubmitted = false;
+  bool isQuizCompleted = false;
 
   // Store answers for each question
   Map<int, String> userAnswers = {};
@@ -38,7 +39,6 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   late AnimationController _pulseController;
   late AnimationController _slideController;
   late AnimationController _scaleController;
-  late Animation<double> _pulseAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _scaleAnimation;
 
@@ -66,9 +66,6 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
       vsync: this,
     );
 
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
     _slideAnimation = Tween<Offset>(
       begin: const Offset(1.0, 0.0),
       end: Offset.zero,
@@ -97,14 +94,17 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   }
 
   void selectAnswer(String answer) {
-    if (userAnswers.containsKey(currentQuestionIndex)) return;
+    if (userAnswers.containsKey(currentQuestionIndex) || isQuizCompleted)
+      return;
     setState(() {
       selectedAnswer = answer;
     });
   }
 
   void submitAnswer() {
-    if (selectedAnswer == null || userAnswers.containsKey(currentQuestionIndex))
+    if (selectedAnswer == null ||
+        userAnswers.containsKey(currentQuestionIndex) ||
+        isQuizCompleted)
       return;
 
     setState(() {
@@ -157,11 +157,12 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
     questionResults[currentQuestionIndex] = isCorrect;
     widget.onAnswerSubmitted?.call(q['questionId'], isCorrect);
 
+    _saveProgress(); // Always persist progress (answers/results), even if incorrect
+
     if (isCorrect) {
       setState(() {
         points += 10;
       });
-      _saveProgress();
       _showEnhancedDialog(
         title: 'Fantastic! 🎉',
         message:
@@ -302,6 +303,9 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   }
 
   void _checkQuizCompletion() async {
+    if (isQuizCompleted) {
+      return; // Stay in review mode
+    }
     if (userAnswers.length == widget.questions.length) {
       await _markCompleted();
       Get.off(() => Dashboard(totalPoints: points));
@@ -317,6 +321,8 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
         unanswered.add(i + 1);
       }
     }
+
+    if (unanswered.isEmpty) return;
 
     showDialog(
       context: context,
@@ -396,31 +402,91 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   Future<void> _loadProgress() async {
     final prefs = await SharedPreferences.getInstance();
     final savedIndex = prefs.getInt('progress_${widget.quizId}') ?? 0;
-    final savedPoints = prefs.getInt('points_${widget.quizId}') ?? 0;
+    final answersJson = prefs.getString('answers_${widget.quizId}');
+    final resultsJson = prefs.getString('results_${widget.quizId}');
+    final isCompleted = prefs.getBool('completed_${widget.quizId}') ?? false;
     if (!mounted) return;
     setState(() {
       final maxIndex =
           widget.questions.isEmpty ? 0 : (widget.questions.length - 1);
-      currentQuestionIndex = savedIndex.clamp(0, maxIndex);
-      points = savedPoints;
+      // Restore previous answers
+      userAnswers.clear();
+      questionResults.clear();
+      if (answersJson != null && answersJson.isNotEmpty) {
+        try {
+          final Map<String, dynamic> map = jsonDecode(answersJson);
+          map.forEach((k, v) {
+            final idx = int.tryParse(k);
+            if (idx != null) userAnswers[idx] = (v ?? '').toString();
+          });
+        } catch (_) {}
+      }
+      if (resultsJson != null && resultsJson.isNotEmpty) {
+        try {
+          final Map<String, dynamic> map = jsonDecode(resultsJson);
+          map.forEach((k, v) {
+            final idx = int.tryParse(k);
+            if (idx != null) questionResults[idx] = (v == true);
+          });
+        } catch (_) {}
+      }
+      // Calculate points from results
+      points = questionResults.values.where((b) => b).length * 10;
+      isQuizCompleted = isCompleted;
+      // Mark viewed questions as those already answered
+      viewedQuestions.addAll(userAnswers.keys);
+      // Jump to first unanswered if any; otherwise use saved index
+      int? firstUnanswered;
+      for (int i = 0; i < widget.questions.length; i++) {
+        if (!userAnswers.containsKey(i)) {
+          firstUnanswered = i;
+          break;
+        }
+      }
+      final fallbackIndex = savedIndex.clamp(0, maxIndex);
+      currentQuestionIndex = firstUnanswered ?? fallbackIndex;
+      selectedAnswer = userAnswers[currentQuestionIndex];
+      isAnswerSubmitted = userAnswers.containsKey(currentQuestionIndex);
     });
+    // Handle auto-completion if all answered but not marked
+    if (mounted &&
+        userAnswers.length == widget.questions.length &&
+        !isQuizCompleted) {
+      await _markCompleted();
+      if (mounted) {
+        Get.off(() => Dashboard(totalPoints: points));
+      }
+    }
+    _saveProgress();
   }
 
   Future<void> _saveProgress() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('progress_${widget.quizId}', currentQuestionIndex);
-    await prefs.setInt('points_${widget.quizId}', points);
+    // Persist answers and correctness so UI can restore review mode
+    final encodedAnswers = jsonEncode(
+      userAnswers.map((k, v) => MapEntry(k.toString(), v)),
+    );
+    final encodedResults = jsonEncode(
+      questionResults.map((k, v) => MapEntry(k.toString(), v)),
+    );
+    await prefs.setString('answers_${widget.quizId}', encodedAnswers);
+    await prefs.setString('results_${widget.quizId}', encodedResults);
   }
 
   Future<void> _markCompleted() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('completed_${widget.quizId}', true);
     await prefs.remove('progress_${widget.quizId}');
-    await prefs.remove('points_${widget.quizId}');
     final badges = prefs.getStringList('badges') ?? [];
     if (!badges.contains(widget.quizId)) {
       badges.add(widget.quizId);
       await prefs.setStringList('badges', badges);
+    }
+    if (mounted) {
+      setState(() {
+        isQuizCompleted = true;
+      });
     }
   }
 
@@ -560,10 +626,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap:
-                  () => Get.off(
-                    () => Dashboard(totalPoints: points),
-                  ),
+              onTap: () => Get.off(() => Dashboard(totalPoints: points)),
               borderRadius: BorderRadius.circular(16),
               child: Icon(
                 Icons.arrow_back_ios_new,
@@ -729,11 +792,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.star,
-                color: Colors.black,
-                size: 22,
-              ),
+              Icon(Icons.star, color: Colors.black, size: 22),
               const SizedBox(width: 8),
               Text(
                 'Points: $value',
@@ -752,23 +811,6 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
 
   Widget _buildQuestionCard() {
     final questionData = widget.questions[currentQuestionIndex];
-    final imagePath =
-        questionData['imageUrl'] as String? ??
-        questionData['image'] as String? ??
-        questionData['imagePath'] as String?;
-
-    final String normalizedImage = (imagePath ?? '').trim();
-    String? networkImageUrl;
-    if (normalizedImage.isNotEmpty) {
-      if (normalizedImage.startsWith('http') ||
-          normalizedImage.startsWith('data:')) {
-        networkImageUrl = normalizedImage;
-      } else if (normalizedImage.startsWith('/')) {
-        networkImageUrl = ApiConfig.baseHost + normalizedImage.substring(1);
-      } else if (!normalizedImage.startsWith('assets/')) {
-        networkImageUrl = ApiConfig.baseHost + normalizedImage;
-      }
-    }
 
     return Container(
       width: double.infinity,
@@ -1002,7 +1044,8 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   }
 
   Widget _buildAnswerOptions() {
-    final bool isReviewMode = userAnswers.containsKey(currentQuestionIndex);
+    final bool isReviewMode =
+        userAnswers.containsKey(currentQuestionIndex) || isQuizCompleted;
     final String? userAnswer = userAnswers[currentQuestionIndex];
     final String? correctAnswer = _getCorrectAnswer(currentQuestionIndex);
 
@@ -1103,11 +1146,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 if (icon != null)
-                                  Icon(
-                                    icon,
-                                    color: Colors.white,
-                                    size: 22,
-                                  ),
+                                  Icon(icon, color: Colors.white, size: 22),
                                 if (icon != null) const SizedBox(height: 6),
                                 Flexible(
                                   child: Text(
@@ -1140,6 +1179,8 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   }
 
   Widget _buildActionButtons() {
+    final bool isReviewMode =
+        userAnswers.containsKey(currentQuestionIndex) || isQuizCompleted;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -1166,11 +1207,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.arrow_back,
-                    size: 18,
-                    color: Colors.black,
-                  ),
+                  Icon(Icons.arrow_back, size: 18, color: Colors.black),
                   const SizedBox(width: 4),
                   Text(
                     'Previous',
@@ -1236,15 +1273,12 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
             padding: const EdgeInsets.only(left: 8),
             child: ElevatedButton(
               onPressed:
-                  userAnswers.containsKey(currentQuestionIndex)
+                  isReviewMode
                       ? _nextQuestion
-                      : selectedAnswer != null
-                      ? submitAnswer
-                      : null,
+                      : (selectedAnswer != null ? submitAnswer : null),
               style: ElevatedButton.styleFrom(
                 backgroundColor:
-                    userAnswers.containsKey(currentQuestionIndex) ||
-                            selectedAnswer != null
+                    isReviewMode || selectedAnswer != null
                         ? Colors.blue[600]
                         : Colors.grey[400],
                 foregroundColor: Colors.black,
@@ -1255,19 +1289,13 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                   vertical: 10,
                   horizontal: 12,
                 ),
-                elevation:
-                    userAnswers.containsKey(currentQuestionIndex) ||
-                            selectedAnswer != null
-                        ? 5
-                        : 0,
+                elevation: isReviewMode || selectedAnswer != null ? 5 : 0,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    userAnswers.containsKey(currentQuestionIndex)
-                        ? 'Next'
-                        : 'Submit',
+                    isReviewMode ? 'Next' : 'Submit',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -1275,11 +1303,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                     ),
                   ),
                   const SizedBox(width: 4),
-                  Icon(
-                    Icons.arrow_forward,
-                    size: 18,
-                    color: Colors.black,
-                  ),
+                  Icon(Icons.arrow_forward, size: 18, color: Colors.black),
                 ],
               ),
             ),

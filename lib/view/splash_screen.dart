@@ -15,7 +15,7 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _bounceController;
   late AnimationController _textAnimationController;
   late AnimationController _quoteAnimationController;
-  
+
   late Animation<double> _scaleAnimation;
   late Animation<double> _textScaleAnimation;
   late Animation<double> _quoteOpacityAnimation;
@@ -37,7 +37,8 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
 
     // Pick a random quote
-    _currentQuote = _motivationalQuotes[math.Random().nextInt(_motivationalQuotes.length)];
+    _currentQuote =
+        _motivationalQuotes[math.Random().nextInt(_motivationalQuotes.length)];
 
     // Initialize animation controllers
     _scaleController = AnimationController(
@@ -78,10 +79,7 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     _quoteOpacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _quoteAnimationController,
-        curve: Curves.easeIn,
-      ),
+      CurvedAnimation(parent: _quoteAnimationController, curve: Curves.easeIn),
     );
 
     _quoteSlideAnimation = Tween<Offset>(
@@ -98,12 +96,12 @@ class _SplashScreenState extends State<SplashScreen>
     _scaleController.forward();
     _rotationController.repeat();
     _bounceController.repeat(reverse: true);
-    
+
     // Delay text animation
     Future.delayed(const Duration(milliseconds: 500), () {
       _textAnimationController.forward();
     });
-    
+
     // Delay quote animation
     Future.delayed(const Duration(milliseconds: 1000), () {
       _quoteAnimationController.forward();
@@ -127,9 +125,6 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -148,7 +143,7 @@ class _SplashScreenState extends State<SplashScreen>
           children: [
             // Floating decorative elements
             ..._buildFloatingElements(),
-            
+
             // Main content
             Center(
               child: Column(
@@ -185,12 +180,15 @@ class _SplashScreenState extends State<SplashScreen>
                     ],
                   ),
                   const SizedBox(height: 40),
-                  
+
                   // App Name with animation
                   ScaleTransition(
                     scale: _textScaleAnimation,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 30,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
@@ -205,13 +203,14 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                       ),
                       child: ShaderMask(
-                        shaderCallback: (bounds) => LinearGradient(
-                          colors: [
-                            Colors.purple[600]!,
-                            Colors.pink[600]!,
-                            Colors.blue[600]!,
-                          ],
-                        ).createShader(bounds),
+                        shaderCallback:
+                            (bounds) => LinearGradient(
+                              colors: [
+                                Colors.purple[600]!,
+                                Colors.pink[600]!,
+                                Colors.blue[600]!,
+                              ],
+                            ).createShader(bounds),
                         child: Text(
                           'BrainZy',
                           style: GoogleFonts.poppins(
@@ -225,7 +224,7 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ),
                   const SizedBox(height: 20),
-                  
+
                   // Motivational Quote
                   SlideTransition(
                     position: _quoteSlideAnimation,
@@ -269,7 +268,7 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ),
                   const SizedBox(height: 30),
-                  
+
                   // Five bouncing emojis
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -284,14 +283,14 @@ class _SplashScreenState extends State<SplashScreen>
                 ],
               ),
             ),
-            
+
             // Bottom section with app name and logos
             Positioned(
               bottom: 0,
               left: 0,
               right: 0,
               child: Container(
-                padding: const EdgeInsets.only(bottom: 30),
+                padding: EdgeInsets.zero,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -309,86 +308,60 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                     ),
                     const SizedBox(height: 20),
-                    
-                    // Logos side by side
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // DU Logo
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.8),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
+
+                    /// Loading indicator at bottom
+                    Positioned(
+                      bottom: 10,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: SizedBox(
+                          width: 100,
+                          height: 8, // increased height for thicker line
+                          child: LinearProgressIndicator(
+                            minHeight: 8, // ensure the indicator renders thicker
+                            backgroundColor: Colors.purple[100],
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.purple[400]!,
+                            ),
                           ),
-                          child: Image.asset(
-                            'assets/home_screen/du_logo.png',
-                            height: 40,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                        const SizedBox(width: 30),
-                        
-                        // ASWDC Logo
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.8),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Image.asset(
-                            'assets/home_screen/ASWC.png',
-                            height: 40,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    
-                    // Powered by text
-                    FadeTransition(
-                      opacity: _quoteOpacityAnimation,
-                      child: Text(
-                        'Powered by DU & ASWDC',
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          color: Colors.grey[600],
-                          letterSpacing: 1,
                         ),
                       ),
                     ),
+                    const SizedBox(height: 10),
+                    //du logo
+                    Container(
+                      width: double.infinity,
+                      height:80, 
+                      padding: const EdgeInsets.only(top: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 6,
+                            offset: const Offset(0, -1),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/home_screen/du_logo.png',
+                            height: 50,
+                            fit: BoxFit.contain,
+                          ),
+                          const SizedBox(width: 30),
+                          Image.asset(
+                            'assets/home_screen/ASWC.png',
+                            height: 50,
+                            fit: BoxFit.contain,
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
-                ),
-              ),
-            ),
-            
-            // Loading indicator at bottom
-            Positioned(
-              bottom: 10,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: SizedBox(
-                  width: 100,
-                  child: LinearProgressIndicator(
-                    backgroundColor: Colors.purple[100],
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.purple[400]!),
-                  ),
                 ),
               ),
             ),
@@ -405,11 +378,12 @@ class _SplashScreenState extends State<SplashScreen>
         builder: (context, child) {
           final screenWidth = MediaQuery.of(context).size.width;
           final screenHeight = MediaQuery.of(context).size.height;
-          
+
           return Positioned(
             left: (index % 4) * (screenWidth / 4) + 20,
-            top: (index ~/ 4) * (screenHeight / 2) + 
-                 math.sin(_bounceController.value * 2 * math.pi + index) * 20,
+            top:
+                (index ~/ 4) * (screenHeight / 2) +
+                math.sin(_bounceController.value * 2 * math.pi + index) * 20,
             child: Container(
               width: 8,
               height: 8,

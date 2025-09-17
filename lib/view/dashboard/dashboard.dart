@@ -155,10 +155,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     return prefs.getBool('completed_$id') ?? false;
   }
 
-  Future<List<String>> _loadBadges() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList('badges') ?? [];
-  }
 
   Widget _tileWithTick({
     required String quizId,
@@ -212,7 +208,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
+
 
     return Scaffold(
       key: _scaffoldKey,
@@ -238,7 +234,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                     Container(
                       height: 100, // Fixed height for app bar
                       padding: const EdgeInsets.only(
-                        top: 16,
+                        top: 20,
                         bottom: 16,
                         left: 20,
                         right: 20,
