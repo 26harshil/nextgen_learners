@@ -27,3 +27,4 @@ export 'package:just_audio/just_audio.dart';
 export 'package:share_plus/share_plus.dart';
 export 'package:package_info_plus/package_info_plus.dart';
 export 'package:flutter/services.dart';
+export 'package:nextgen_learners/view/dashboard/feedback_view.dart';

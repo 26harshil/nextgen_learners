@@ -155,7 +155,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     return prefs.getBool('completed_$id') ?? false;
   }
 
-
   Widget _tileWithTick({
     required String quizId,
     required CustomContainer tile,
@@ -206,10 +205,137 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  Widget _buildEnhancedStatCard({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+    required Gradient gradient,
+    String? subtitle,
+    double? progress,
+    bool showTrend = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Icon with background
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 8),
+
+          // Value with animation
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: 1),
+            duration: const Duration(milliseconds: 1000),
+            builder: (context, animValue, child) {
+              return Transform.scale(
+                scale: 0.9 + (animValue * 0.1),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      value,
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: color,
+                      ),
+                    ),
+                    if (showTrend) ...[
+                      const SizedBox(width: 4),
+                      Icon(Icons.arrow_upward, color: color, size: 14),
+                    ],
+                  ],
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(height: 4),
+
+          // Label
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          // Progress bar if provided
+          if (progress != null) ...[
+            const SizedBox(height: 6),
+            Container(
+              height: 3,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(2),
+              ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return Stack(
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 800),
+                        width: constraints.maxWidth * progress.clamp(0.0, 1.0),
+                        height: 3,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [color, color.withOpacity(0.6)],
+                          ),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
+
+          // Subtitle if provided
+          if (subtitle != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: GoogleFonts.poppins(
+                fontSize: 9,
+                color: color.withOpacity(0.8),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-
-
     return Scaffold(
       key: _scaffoldKey,
       drawer: _buildAppDrawer(context),
@@ -218,7 +344,21 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.purple[100]!, Colors.white, Colors.cyan[50]!],
+            colors: [
+              Colors.purple[400]!,
+              Colors.pink[400]!,
+              Colors.orange[300]!,
+              // Then transition to white/cyan
+              Colors.white,
+              Colors.cyan[50]!,
+            ],
+            stops: const [
+              0.0, // Start with purple
+              0.05, // Quick transition to pink
+              0.1, // Then to orange
+              0.4, // Fade to white
+              1.0, // End with cyan
+            ],
           ),
         ),
         child: AnimatedBuilder(
@@ -228,489 +368,504 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               opacity: _fadeAnimation,
               child: Transform.scale(
                 scale: _scaleAnimation.value,
-                child: Column(
-                  children: [
-                    // Custom App Bar with fixed height
-                    Container(
-                      height: 100, // Fixed height for app bar
-                      padding: const EdgeInsets.only(
-                        top: 20,
-                        bottom: 16,
-                        left: 20,
-                        right: 20,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.purple[400]!,
-                            Colors.pink[400]!,
-                            Colors.orange[300]!,
+                child: SafeArea(
+                  top: true,
+                  bottom: true,
+                  minimum: const EdgeInsets.only(top: 8),
+                  child: Column(
+                    children: [
+                      // Custom App Bar with fixed height
+                      Container(
+                        height: 100, // Fixed height for app bar
+                        padding: const EdgeInsets.only(
+                          top: 20,
+                          bottom: 16,
+                          left: 20,
+                          right: 20,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.purple[400]!,
+                              Colors.pink[400]!,
+                              Colors.orange[300]!,
+                            ],
+                          ),
+                          borderRadius: const BorderRadius.only(
+                            bottomLeft: Radius.circular(30),
+                            bottomRight: Radius.circular(30),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.purple.withOpacity(0.3),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
+                            ),
                           ],
                         ),
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(30),
-                          bottomRight: Radius.circular(30),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.purple.withOpacity(0.3),
-                            blurRadius: 15,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          // Menu Button
-                          InkWell(
-                            onTap:
-                                () => _scaffoldKey.currentState?.openDrawer(),
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.menu,
-                                color: Colors.white,
-                                size: 24,
+                        child: Row(
+                          children: [
+                            // Menu Button
+                            InkWell(
+                              onTap:
+                                  () => _scaffoldKey.currentState?.openDrawer(),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.menu,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          // Title
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'BrainZy',
-                                  style: GoogleFonts.fredoka(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20,
-                                    color: Colors.white,
-                                    letterSpacing: 1.2,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black.withOpacity(0.2),
-                                        blurRadius: 4,
-                                        offset: const Offset(2, 2),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Text(
-                                  'Learning Made Fun! 🌟',
-                                  style: GoogleFonts.fredoka(
-                                    fontSize: 13,
-                                    color: Colors.white.withOpacity(0.95),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Trophy Icon
-                          AnimatedBuilder(
-                            animation: _bounceAnimation,
-                            builder: (context, child) {
-                              return Transform.scale(
-                                scale: _bounceAnimation.value,
-                                child: Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(
-                                    Icons.emoji_events,
-                                    color: Colors.yellow,
-                                    size: 24,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Main Content
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Obx(() {
-                          if (_controller.isLoading.value) {
-                            return Center(
+                            const SizedBox(width: 16),
+                            // Title
+                            Expanded(
                               child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  CircularProgressIndicator(
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.purple[400]!,
+                                  Text(
+                                    'BrainZy',
+                                    style: GoogleFonts.fredoka(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      color: Colors.white,
+                                      letterSpacing: 1.2,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black.withOpacity(0.2),
+                                          blurRadius: 4,
+                                          offset: const Offset(2, 2),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(height: 20),
                                   Text(
-                                    'Loading awesome content...',
+                                    'Learning Made Fun! 🌟',
                                     style: GoogleFonts.fredoka(
-                                      fontSize: 16,
-                                      color: Colors.purple[600],
+                                      fontSize: 13,
+                                      color: Colors.white.withOpacity(0.95),
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ],
                               ),
-                            );
-                          }
-                          return Column(
-                            children: [
-                              // Welcome Section with Stats - Fixed height
-                              // Inside the build method's Column > Expanded > Obx > Column
-                              Container(
-                                width: double.infinity,
-                                margin: const EdgeInsets.only(bottom: 20),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      Colors.purple[400]!.withOpacity(0.9),
-                                      Colors.blue[400]!.withOpacity(0.9),
-                                      Colors.cyan[400]!.withOpacity(0.9),
+                            ),
+                            // Trophy Icon
+                            AnimatedBuilder(
+                              animation: _bounceAnimation,
+                              builder: (context, child) {
+                                return Transform.scale(
+                                  scale: _bounceAnimation.value,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.emoji_events,
+                                      color: Colors.yellow,
+                                      size: 24,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Main Content
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Obx(() {
+                            if (_controller.isLoading.value) {
+                              return Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.purple[400]!,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Text(
+                                      'Loading awesome content...',
+                                      style: GoogleFonts.fredoka(
+                                        fontSize: 16,
+                                        color: Colors.purple[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                            return Column(
+                              children: [
+                                // Welcome Section with Stats - Fixed height
+                                // Inside the build method's Column > Expanded > Obx > Column
+                                Container(
+                                  width: double.infinity,
+                                  margin: const EdgeInsets.only(bottom: 20),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Colors.purple[400]!.withOpacity(0.9),
+                                        Colors.blue[400]!.withOpacity(0.9),
+                                        Colors.cyan[400]!.withOpacity(0.9),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(24),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.purple.withOpacity(0.3),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                      BoxShadow(
+                                        color: Colors.blue.withOpacity(0.2),
+                                        blurRadius: 15,
+                                        offset: const Offset(-5, 5),
+                                      ),
                                     ],
                                   ),
-                                  borderRadius: BorderRadius.circular(24),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.purple.withOpacity(0.3),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 10),
-                                    ),
-                                    BoxShadow(
-                                      color: Colors.blue.withOpacity(0.2),
-                                      blurRadius: 15,
-                                      offset: const Offset(-5, 5),
-                                    ),
-                                  ],
-                                ),
-                                child: Stack(
-                                  children: [
-                                    // Decorative circles
-                                    Positioned(
-                                      top: -20,
-                                      right: -20,
-                                      child: Container(
-                                        width: 80,
-                                        height: 80,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.white.withOpacity(0.1),
+                                  child: Stack(
+                                    children: [
+                                      // Decorative circles
+                                      Positioned(
+                                        top: -20,
+                                        right: -20,
+                                        child: Container(
+                                          width: 80,
+                                          height: 80,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.white.withOpacity(
+                                              0.1,
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    Positioned(
-                                      bottom: -30,
-                                      left: -30,
-                                      child: Container(
-                                        width: 100,
-                                        height: 100,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.white.withOpacity(0.08),
+                                      Positioned(
+                                        bottom: -30,
+                                        left: -30,
+                                        child: Container(
+                                          width: 100,
+                                          height: 100,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.white.withOpacity(
+                                              0.08,
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                    ),
 
-                                    // Main content
-                                    Padding(
-                                      padding: const EdgeInsets.all(20),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          // Welcome Header
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Container(
-                                                padding: const EdgeInsets.all(
-                                                  8,
+                                      // Main content
+                                      Padding(
+                                        padding: const EdgeInsets.all(20),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            // Welcome Header
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.all(
+                                                    8,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white
+                                                        .withOpacity(0.2),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.star,
+                                                    color: Colors.amber,
+                                                    size: 20,
+                                                  ),
                                                 ),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white
-                                                      .withOpacity(0.2),
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: const Icon(
-                                                  Icons.star,
-                                                  color: Colors.amber,
-                                                  size: 20,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Flexible(
-                                                child: ShaderMask(
-                                                  shaderCallback:
-                                                      (bounds) =>
-                                                          const LinearGradient(
-                                                            colors: [
-                                                              Colors.white,
-                                                              Colors.white70,
-                                                            ],
-                                                          ).createShader(
-                                                            bounds,
+                                                const SizedBox(width: 12),
+                                                Flexible(
+                                                  child: ShaderMask(
+                                                    shaderCallback:
+                                                        (bounds) =>
+                                                            const LinearGradient(
+                                                              colors: [
+                                                                Colors.white,
+                                                                Colors.white70,
+                                                              ],
+                                                            ).createShader(
+                                                              bounds,
+                                                            ),
+                                                    child: Text(
+                                                      'Learning Adventure',
+                                                      style:
+                                                          GoogleFonts.fredoka(
+                                                            fontSize: 18,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: Colors.white,
+                                                            letterSpacing: 0.5,
                                                           ),
-                                                  child: Text(
-                                                    'Learning Adventure',
-                                                    style: GoogleFonts.fredoka(
-                                                      fontSize: 18,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: Colors.white,
-                                                      letterSpacing: 0.5,
+                                                      textAlign:
+                                                          TextAlign.center,
                                                     ),
-                                                    textAlign: TextAlign.center,
                                                   ),
                                                 ),
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Container(
-                                                padding: const EdgeInsets.all(
-                                                  8,
+                                                const SizedBox(width: 12),
+                                                Container(
+                                                  padding: const EdgeInsets.all(
+                                                    8,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white
+                                                        .withOpacity(0.2),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.rocket_launch,
+                                                    color: Colors.orange,
+                                                    size: 20,
+                                                  ),
                                                 ),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white
-                                                      .withOpacity(0.2),
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: const Icon(
-                                                  Icons.rocket_launch,
-                                                  color: Colors.orange,
-                                                  size: 20,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-
-                                          const SizedBox(height: 8),
-
-                                          // Motivational text
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 6,
+                                              ],
                                             ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(
-                                                0.15,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                            ),
-                                            child: Text(
-                                              'Keep learning, keep growing! 🌟',
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 12,
+
+                                            const SizedBox(height: 8),
+
+                                            // Motivational text
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 16,
+                                                    vertical: 6,
+                                                  ),
+                                              decoration: BoxDecoration(
                                                 color: Colors.white.withOpacity(
-                                                  0.95,
+                                                  0.15,
                                                 ),
-                                                fontWeight: FontWeight.w500,
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              child: Text(
+                                                'Keep learning, keep growing! 🌟',
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 12,
+                                                  color: Colors.white
+                                                      .withOpacity(0.95),
+                                                  fontWeight: FontWeight.w500,
+                                                ),
                                               ),
                                             ),
-                                          ),
 
-                                          const SizedBox(height: 20),
+                                            const SizedBox(height: 20),
 
-                                          // Enhanced Stat Cards
-                                          Row(
-                                            children: [
-                                              // Points Card
-                                              // Progress Card
-                                              Expanded(
-                                                child: _buildEnhancedStatCard(
-                                                  icon: Icons.check_circle,
-                                                  value: '$completedQuizzes/8',
-                                                  label: 'Completed',
-                                                  color: Colors.green,
-                                                  gradient: LinearGradient(
-                                                    begin: Alignment.topLeft,
-                                                    end: Alignment.bottomRight,
-                                                    colors: [
-                                                      Colors.white.withOpacity(
-                                                        0.95,
-                                                      ),
-                                                      Colors.green[50]!
-                                                          .withOpacity(0.95),
-                                                    ],
+                                            // Enhanced Stat Cards
+                                            Row(
+                                              children: [
+                                                // Points Card
+                                                // Progress Card
+                                                Expanded(
+                                                  child: _buildEnhancedStatCard(
+                                                    icon: Icons.check_circle,
+                                                    value:
+                                                        '$completedQuizzes/8',
+                                                    label: 'Completed',
+                                                    color: Colors.green,
+                                                    gradient: LinearGradient(
+                                                      begin: Alignment.topLeft,
+                                                      end:
+                                                          Alignment.bottomRight,
+                                                      colors: [
+                                                        Colors.white
+                                                            .withOpacity(0.95),
+                                                        Colors.green[50]!
+                                                            .withOpacity(0.95),
+                                                      ],
+                                                    ),
+                                                    progress:
+                                                        completedQuizzes / 8,
                                                   ),
-                                                  progress:
-                                                      completedQuizzes / 8,
                                                 ),
-                                              ),
-                                              const SizedBox(width: 10),
+                                                const SizedBox(width: 10),
 
-                                              // Percentage Card
-                                              Expanded(
-                                                child: _buildEnhancedStatCard(
-                                                  icon: Icons.trending_up,
-                                                  value:
-                                                      '${(completedQuizzes / 8 * 100).toInt()}%',
-                                                  label: 'Progress',
-                                                  color: Colors.blue,
-                                                  gradient: LinearGradient(
-                                                    begin: Alignment.topLeft,
-                                                    end: Alignment.bottomRight,
-                                                    colors: [
-                                                      Colors.white.withOpacity(
-                                                        0.95,
-                                                      ),
-                                                      Colors.blue[50]!
-                                                          .withOpacity(0.95),
-                                                    ],
+                                                // Percentage Card
+                                                Expanded(
+                                                  child: _buildEnhancedStatCard(
+                                                    icon: Icons.trending_up,
+                                                    value:
+                                                        '${(completedQuizzes / 8 * 100).toInt()}%',
+                                                    label: 'Progress',
+                                                    color: Colors.blue,
+                                                    gradient: LinearGradient(
+                                                      begin: Alignment.topLeft,
+                                                      end:
+                                                          Alignment.bottomRight,
+                                                      colors: [
+                                                        Colors.white
+                                                            .withOpacity(0.95),
+                                                        Colors.blue[50]!
+                                                            .withOpacity(0.95),
+                                                      ],
+                                                    ),
+                                                    showTrend: true,
                                                   ),
-                                                  showTrend: true,
                                                 ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
+                                              ],
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
+                                ), // Added missing comma here
+                                Expanded(
+                                  child: GridView.count(
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
+                                    childAspectRatio:
+                                        1.0, // Square cards for consistency
+                                    physics: const BouncingScrollPhysics(),
+                                    children: [
+                                      _tileWithTick(
+                                        quizId: 'animal_name',
+                                        tile: CustomContainer(
+                                          key: UniqueKey(),
+                                          newPage: ANIMAL_Name_SCREEN,
+                                          title: "Animals",
+                                          subtitle: "Meet animals!",
+                                          img: 'assets/home_screen/lion.jpg',
+                                          primaryColor:
+                                              ANIMAL_SCREEN_COLOR_LIGHT_PINK,
+                                          secondaryColor:
+                                              ANIMAL_SCREEN_COLOR_LIGHT_LAVENDER,
+                                          delay: 200,
+                                        ),
+                                      ),
+                                      _tileWithTick(
+                                        quizId: 'sounds',
+                                        tile: CustomContainer(
+                                          key: UniqueKey(),
+                                          newPage: ANIMAL_SOUND_SCREEN,
+                                          title: "Sounds",
+                                          subtitle: "Hear them!",
+                                          img: 'assets/home_screen/sound.webp',
+                                          primaryColor:
+                                              ANIMALSOUND_COLOR_LIGHT_ORANGE,
+                                          secondaryColor:
+                                              ANIMALSOUND_COLOR_LIGHT_CYAN,
+                                          delay: 400,
+                                        ),
+                                      ),
+                                      _tileWithTick(
+                                        quizId: 'math',
+                                        tile: CustomContainer(
+                                          key: UniqueKey(),
+                                          newPage: MATH_SCREEN,
+                                          title: "Math Fun",
+                                          subtitle: "Numbers!",
+                                          img: 'assets/home_screen/math.webp',
+                                          primaryColor: MATH_COLOR_LIGHT_PEACH,
+                                          secondaryColor: MATH_COLOR_SOFT_PINK,
+                                          delay: 600,
+                                        ),
+                                      ),
+                                      _tileWithTick(
+                                        quizId: 'vehicles',
+                                        tile: CustomContainer(
+                                          key: UniqueKey(),
+                                          newPage: VEHICLE_NAME_SCREEN,
+                                          title: "Vehicles",
+                                          subtitle: "Cars & more!",
+                                          img:
+                                              'assets/home_screen/vehicals.jpg',
+                                          primaryColor:
+                                              VEHICLES_COLOR_LIGHT_BLUE,
+                                          secondaryColor:
+                                              VEHICLES_COLOR_SKY_BLUE,
+                                          delay: 800,
+                                        ),
+                                      ),
+                                      _tileWithTick(
+                                        quizId: 'fruits',
+                                        tile: CustomContainer(
+                                          key: UniqueKey(),
+                                          newPage: FRUITS_SCREEN,
+                                          title: "Fruits",
+                                          subtitle: "Tasty treats!",
+                                          img: 'assets/home_screen/fruits.jpg',
+                                          primaryColor: Colors.red[100]!,
+                                          secondaryColor: Colors.orange[100]!,
+                                          delay: 1000,
+                                        ),
+                                      ),
+                                      _tileWithTick(
+                                        quizId: 'vegetables',
+                                        tile: CustomContainer(
+                                          key: UniqueKey(),
+                                          newPage: VEGETABLES_SCREEN,
+                                          title: "Veggies",
+                                          subtitle: "Healthy food!",
+                                          img:
+                                              'assets/home_screen/vegetables.jpg',
+                                          primaryColor: Colors.green[100]!,
+                                          secondaryColor: Colors.lime[100]!,
+                                          delay: 1200,
+                                        ),
+                                      ),
+                                      _tileWithTick(
+                                        quizId: 'colors',
+                                        tile: CustomContainer(
+                                          key: UniqueKey(),
+                                          newPage: COLORS_Screen,
+                                          title: "Colors",
+                                          subtitle: "Rainbow fun!",
+                                          img: 'assets/home_screen/colors.webp',
+                                          primaryColor: Colors.blue[100]!,
+                                          secondaryColor: Colors.purple[100]!,
+                                          delay: 1400,
+                                        ),
+                                      ),
+                                      _tileWithTick(
+                                        quizId: 'birds',
+                                        tile: CustomContainer(
+                                          key: UniqueKey(),
+                                          newPage: BIRDS_SCREEN,
+                                          title: "Birds",
+                                          subtitle: "Flying high!",
+                                          img: 'assets/home_screen/birds.jpg',
+                                          primaryColor: MATH_COLOR_LIGHT_PEACH,
+                                          secondaryColor: MATH_COLOR_SOFT_PINK,
+                                          delay: 1600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              Expanded(
-                                child: GridView.count(
-                                  crossAxisCount: 2,
-                                  crossAxisSpacing: 16,
-                                  mainAxisSpacing: 16,
-                                  childAspectRatio:
-                                      1.0, // Square cards for consistency
-                                  physics: const BouncingScrollPhysics(),
-                                  children: [
-                                    _tileWithTick(
-                                      quizId: 'animal_name',
-                                      tile: CustomContainer(
-                                        key: UniqueKey(),
-                                        newPage: ANIMAL_Name_SCREEN,
-                                        title: "Animals",
-                                        subtitle: "Meet animals!",
-                                        img: 'assets/home_screen/lion.jpg',
-                                        primaryColor:
-                                            ANIMAL_SCREEN_COLOR_LIGHT_PINK,
-                                        secondaryColor:
-                                            ANIMAL_SCREEN_COLOR_LIGHT_LAVENDER,
-                                        delay: 200,
-                                      ),
-                                    ),
-                                    _tileWithTick(
-                                      quizId: 'sounds',
-                                      tile: CustomContainer(
-                                        key: UniqueKey(),
-                                        newPage: ANIMAL_SOUND_SCREEN,
-                                        title: "Sounds",
-                                        subtitle: "Hear them!",
-                                        img: 'assets/home_screen/sound.webp',
-                                        primaryColor:
-                                            ANIMALSOUND_COLOR_LIGHT_ORANGE,
-                                        secondaryColor:
-                                            ANIMALSOUND_COLOR_LIGHT_CYAN,
-                                        delay: 400,
-                                      ),
-                                    ),
-                                    _tileWithTick(
-                                      quizId: 'math',
-                                      tile: CustomContainer(
-                                        key: UniqueKey(),
-                                        newPage: MATH_SCREEN,
-                                        title: "Math Fun",
-                                        subtitle: "Numbers!",
-                                        img: 'assets/home_screen/math.webp',
-                                        primaryColor: MATH_COLOR_LIGHT_PEACH,
-                                        secondaryColor: MATH_COLOR_SOFT_PINK,
-                                        delay: 600,
-                                      ),
-                                    ),
-                                    _tileWithTick(
-                                      quizId: 'vehicles',
-                                      tile: CustomContainer(
-                                        key: UniqueKey(),
-                                        newPage: VEHICLE_NAME_SCREEN,
-                                        title: "Vehicles",
-                                        subtitle: "Cars & more!",
-                                        img: 'assets/home_screen/vehicals.jpg',
-                                        primaryColor: VEHICLES_COLOR_LIGHT_BLUE,
-                                        secondaryColor: VEHICLES_COLOR_SKY_BLUE,
-                                        delay: 800,
-                                      ),
-                                    ),
-                                    _tileWithTick(
-                                      quizId: 'fruits',
-                                      tile: CustomContainer(
-                                        key: UniqueKey(),
-                                        newPage: FRUITS_SCREEN,
-                                        title: "Fruits",
-                                        subtitle: "Tasty treats!",
-                                        img: 'assets/home_screen/fruits.jpg',
-                                        primaryColor: Colors.red[100]!,
-                                        secondaryColor: Colors.orange[100]!,
-                                        delay: 1000,
-                                      ),
-                                    ),
-                                    _tileWithTick(
-                                      quizId: 'vegetables',
-                                      tile: CustomContainer(
-                                        key: UniqueKey(),
-                                        newPage: VEGETABLES_SCREEN,
-                                        title: "Veggies",
-                                        subtitle: "Healthy food!",
-                                        img:
-                                            'assets/home_screen/vegetables.jpg',
-                                        primaryColor: Colors.green[100]!,
-                                        secondaryColor: Colors.lime[100]!,
-                                        delay: 1200,
-                                      ),
-                                    ),
-                                    _tileWithTick(
-                                      quizId: 'colors',
-                                      tile: CustomContainer(
-                                        key: UniqueKey(),
-                                        newPage: COLORS_Screen,
-                                        title: "Colors",
-                                        subtitle: "Rainbow fun!",
-                                        img: 'assets/home_screen/colors.webp',
-                                        primaryColor: Colors.blue[100]!,
-                                        secondaryColor: Colors.purple[100]!,
-                                        delay: 1400,
-                                      ),
-                                    ),
-                                    _tileWithTick(
-                                      quizId: 'birds',
-                                      tile: CustomContainer(
-                                        key: UniqueKey(),
-                                        newPage: BIRDS_SCREEN,
-                                        title: "Birds",
-                                        subtitle: "Flying high!",
-                                        img: 'assets/home_screen/birds.jpg',
-                                        primaryColor: MATH_COLOR_LIGHT_PEACH,
-                                        secondaryColor: MATH_COLOR_SOFT_PINK,
-                                        delay: 1600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        }),
+                              ],
+                            );
+                          }),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ), // Added missing ] here for outer Column children
                 ),
               ),
             );
@@ -787,6 +942,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               onTap: () {
                 Navigator.pop(context);
                 Get.to(() => const AchievementsPage());
+              },
+            ),
+            _buildDrawerItem(
+              icon: Icons.feedback_outlined,
+              title: 'Feedback',
+              color: Colors.teal,
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed(FEEDBACK_SCREEN);
               },
             ),
             _buildDrawerItem(
@@ -904,134 +1068,4 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       ),
     );
   }
-}
-
-// Add this enhanced stat card widget method:
-Widget _buildEnhancedStatCard({
-  required IconData icon,
-  required String value,
-  required String label,
-  required Color color,
-  required Gradient gradient,
-  String? subtitle,
-  double? progress,
-  bool showTrend = false,
-}) {
-  return Container(
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      gradient: gradient,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: color.withOpacity(0.3), width: 1),
-      boxShadow: [
-        BoxShadow(
-          color: color.withOpacity(0.2),
-          blurRadius: 8,
-          offset: const Offset(0, 4),
-        ),
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Icon with background
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        const SizedBox(height: 8),
-
-        // Value with animation
-        TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0, end: 1),
-          duration: const Duration(milliseconds: 1000),
-          builder: (context, animValue, child) {
-            return Transform.scale(
-              scale: 0.9 + (animValue * 0.1),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    value,
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: color,
-                    ),
-                  ),
-                  if (showTrend) ...[
-                    const SizedBox(width: 4),
-                    Icon(Icons.arrow_upward, color: color, size: 14),
-                  ],
-                ],
-              ),
-            );
-          },
-        ),
-
-        const SizedBox(height: 4),
-
-        // Label
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey[700],
-          ),
-          textAlign: TextAlign.center,
-        ),
-
-        // Progress bar if provided
-        if (progress != null) ...[
-          const SizedBox(height: 6),
-          Container(
-            height: 3,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(2),
-            ),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return Stack(
-                  children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 800),
-                      width: constraints.maxWidth * progress.clamp(0.0, 1.0),
-                      height: 3,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [color, color.withOpacity(0.6)],
-                        ),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-
-        // Subtitle if provided
-        if (subtitle != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: GoogleFonts.poppins(
-              fontSize: 9,
-              color: color.withOpacity(0.8),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ],
-    ),
-  );
 }

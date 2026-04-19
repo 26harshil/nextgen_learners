@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+  flutter_dotenv: ^5.2.1
   get: ^4.6.6
   http: ^1.2.2
   flutter_tts: ^4.0.2
@@ -42,6 +43,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - .env
     - assets/home_screen/
     - assets/fonts/
     - assets/badges/

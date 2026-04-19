@@ -329,38 +329,8 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                     ),
                     const SizedBox(height: 10),
-                    //du logo
-                    Container(
-                      width: double.infinity,
-                      height:80, 
-                      padding: const EdgeInsets.only(top: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 6,
-                            offset: const Offset(0, -1),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            'assets/home_screen/du_logo.png',
-                            height: 50,
-                            fit: BoxFit.contain,
-                          ),
-                          const SizedBox(width: 30),
-                          Image.asset(
-                            'assets/home_screen/ASWC.png',
-                            height: 50,
-                            fit: BoxFit.contain,
-                          ),
-                        ],
-                      ),
-                    ),
+                    
+                    
                   ],
                 ),
               ),

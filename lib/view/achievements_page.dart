@@ -127,7 +127,12 @@ class _AchievementsPageState extends State<AchievementsPage>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Colors.purple[400]!, Colors.cyan[400]!],
+              colors: [
+                Colors.blue[100]!,
+                Colors.green[100]!,
+                Colors.orange[50]!,
+                Colors.blue[50]!,
+              ],
             ),
           ),
         ),
@@ -172,9 +177,15 @@ class _AchievementsPageState extends State<AchievementsPage>
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.purple[50]!.withOpacity(0.5), Colors.white],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.blue[100]!,
+              Colors.green[100]!,
+              Colors.orange[50]!,
+              Colors.blue[50]!,
+            ],
+            stops: const [0.0, 0.3, 0.7, 1.0],
           ),
         ),
         child: TabBarView(
@@ -218,12 +229,12 @@ class _AchievementsPageState extends State<AchievementsPage>
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.purple[100]!, Colors.blue[100]!],
+          colors: [Colors.blue[100]!, Colors.green[100]!],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.purple.withOpacity(0.1),
+            color: Colors.blue.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -239,7 +250,7 @@ class _AchievementsPageState extends State<AchievementsPage>
             ),
             child: Icon(
               Icons.format_quote,
-              color: Colors.purple[600],
+              color: Colors.blue[700],
               size: 24,
             ),
           ),
@@ -250,7 +261,7 @@ class _AchievementsPageState extends State<AchievementsPage>
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 fontStyle: FontStyle.italic,
-                color: Colors.purple[800],
+                color: Colors.blue[900],
                 height: 1.4,
               ),
             ),
@@ -361,13 +372,13 @@ class _AchievementsPageState extends State<AchievementsPage>
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: Colors.purple[800],
+                  color: Colors.blue[900],
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.purple[100],
+                  color: Colors.blue[100],
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -375,7 +386,7 @@ class _AchievementsPageState extends State<AchievementsPage>
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.purple[800],
+                    color: Colors.blue[800],
                   ),
                 ),
               ),
@@ -395,23 +406,23 @@ class _AchievementsPageState extends State<AchievementsPage>
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.purple[50]!, Colors.blue[50]!],
+          colors: [Colors.blue[50]!, Colors.green[50]!],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.purple[200]!, width: 2),
+        border: Border.all(color: Colors.blue[200]!, width: 2),
       ),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.emoji_events, size: 48, color: Colors.purple[400]),
+            Icon(Icons.emoji_events, size: 48, color: Colors.blue[400]),
             const SizedBox(height: 12),
             Text(
               'No badges yet!',
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: Colors.purple[700],
+                color: Colors.blue[700],
               ),
             ),
             const SizedBox(height: 8),
@@ -452,12 +463,12 @@ class _AchievementsPageState extends State<AchievementsPage>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: earned
-              ? [Colors.purple[100]!, Colors.blue[100]!]
+              ? [Colors.blue[100]!, Colors.green[100]!]
               : [Colors.grey[200]!, Colors.grey[300]!],
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: earned ? Colors.purple[400]! : Colors.grey[400]!,
+          color: earned ? Colors.blue[400]! : Colors.grey[400]!,
           width: 2,
         ),
       ),
@@ -472,7 +483,7 @@ class _AchievementsPageState extends State<AchievementsPage>
               return Icon(
                 Icons.emoji_events,
                 size: 36,
-                color: earned ? Colors.purple[400] : Colors.grey[400],
+                color: earned ? Colors.blue[400] : Colors.grey[400],
               );
             },
           ),
@@ -483,7 +494,7 @@ class _AchievementsPageState extends State<AchievementsPage>
             style: GoogleFonts.poppins(
               fontSize: 9,
               fontWeight: FontWeight.w600,
-              color: earned ? Colors.purple[700] : Colors.grey[600],
+              color: earned ? Colors.blue[700] : Colors.grey[600],
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

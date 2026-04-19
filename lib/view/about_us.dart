@@ -583,7 +583,7 @@ class _AboutUsPageState extends State<AboutUsPage>
           _buildTeamCard(
             emoji: '🎯',
             role: 'Mentor',
-            name: 'Mehul Bhundiya',
+            name: 'Prof.Mehul Bhundiya',
             description: 'Project Guidance',
             color: Colors.blue,
           ),

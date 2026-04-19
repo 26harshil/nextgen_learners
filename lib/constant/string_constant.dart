@@ -30,5 +30,6 @@ const String ANIMAL_Name_SCREEN = '/animalname';
 const String ANIMAL_SOUND_SCREEN = '/sounds';
 const String DASHBOARD_SCREEN = '/dashboard';
 const String SPLASH_SCREEN = '/splash_screen';
+const String FEEDBACK_SCREEN = '/feedback';
 
 // endregion

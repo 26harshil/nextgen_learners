@@ -25,12 +25,11 @@ class QuizScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final apiUrl = ApiConfig.quizUrl(quizId);
-    debugPrint('Quiz API URL: $apiUrl');
+    debugPrint('Quiz ID: $quizId');
     debugPrint(':::Badge Image URL::: assets/badges/$quizId.png');
 
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: QuizService.fetchQuiz(apiUrl),
+      future: QuizService.fetchQuizById(quizId),
       builder: (context, snapshot) {
         // Loading
         if (snapshot.connectionState == ConnectionState.waiting) {

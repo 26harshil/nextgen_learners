@@ -107,4 +107,106 @@ class QuizService {
       rethrow;
     }
   }
+
+  static List<dynamic> _extractItems(dynamic decoded) {
+    if (decoded is List) {
+      return decoded;
+    }
+    if (decoded is Map && decoded['data'] is List) {
+      return decoded['data'] as List;
+    }
+    if (decoded is Map && decoded['questions'] is List) {
+      return decoded['questions'] as List;
+    }
+    if (decoded is Map && decoded['items'] is List) {
+      return decoded['items'] as List;
+    }
+    return <dynamic>[];
+  }
+
+  /// Fetch by [quizId] and try multiple endpoint/category variants.
+  static Future<List<Map<String, dynamic>>> fetchQuizById(String quizId) async {
+    final urls = ApiConfig.quizUrlsFor(quizId);
+    Object? lastError;
+
+    for (final url in urls) {
+      try {
+        if (kDebugMode) debugPrint('Trying quiz endpoint: $url');
+        final resp = await http.get(Uri.parse(url));
+        if (resp.statusCode != 200) {
+          if (kDebugMode) {
+            debugPrint('HTTP ${resp.statusCode} for $url');
+          }
+          continue;
+        }
+
+        final decoded = json.decode(resp.body);
+        final rawList = _extractItems(decoded);
+        if (rawList.isEmpty) {
+          if (kDebugMode) debugPrint('No quiz items in payload for $url');
+          continue;
+        }
+
+        final sanitized =
+            rawList.map<Map<String, dynamic>>((rawItem) {
+              final Map<String, dynamic> item =
+                  (rawItem is Map)
+                      ? Map<String, dynamic>.from(rawItem)
+                      : <String, dynamic>{};
+
+              final String questionText =
+                  (item['questionText'] ?? item['question'] ?? '').toString();
+              final String imageUrl =
+                  (item['imageUrl'] ?? item['image'] ?? '').toString().trim();
+              final String soundUrl =
+                  (item['soundUrl'] ?? item['sound'] ?? '').toString();
+              final String hint = (item['hint'] ?? '').toString();
+              final String funFact =
+                  (item['funFact'] ?? item['info'] ?? '').toString();
+              final dynamic qId =
+                  item.containsKey('questionId') ? item['questionId'] : null;
+
+              final List<dynamic> rawOptions =
+                  (item['options'] is List) ? item['options'] as List : <dynamic>[];
+              final options =
+                  rawOptions.map<Map<String, dynamic>>((optRaw) {
+                    final Map<String, dynamic> opt =
+                        (optRaw is Map)
+                            ? Map<String, dynamic>.from(optRaw)
+                            : <String, dynamic>{};
+                    return <String, dynamic>{
+                      'optionId': opt['optionId'] ?? opt['id'] ?? null,
+                      'optionText':
+                          (opt['optionText'] ?? opt['text'] ?? opt['value'] ?? '')
+                              .toString(),
+                      'isCorrect':
+                          (opt['isCorrect'] == true) ||
+                          (opt['correct'] == true) ||
+                          (opt['answer'] == true),
+                    };
+                  }).toList();
+
+              final map = <String, dynamic>{
+                'questionText': questionText,
+                'imageUrl': imageUrl,
+                'soundUrl': soundUrl,
+                'hint': hint,
+                'funFact': funFact,
+                'options': options,
+              };
+              if (qId != null) map['questionId'] = qId;
+              return map;
+            }).toList();
+
+        return sanitized;
+      } catch (e) {
+        lastError = e;
+      }
+    }
+
+    if (lastError != null) {
+      throw Exception('Failed to load quiz "$quizId": $lastError');
+    }
+    throw Exception('Failed to load quiz "$quizId" from known endpoints.');
+  }
 }

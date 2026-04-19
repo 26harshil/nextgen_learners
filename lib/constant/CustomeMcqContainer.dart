@@ -1,10 +1,14 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'package:nextgen_learners/constant/import_export.dart';
 
 class CustomMCQWidget extends StatefulWidget {
   final List<Map<String, dynamic>> questions;
   final String quizTitle;
   final String quizId;
-  // Added theme parameter
   final void Function(dynamic questionId, bool isCorrect)? onAnswerSubmitted;
 
   const CustomMCQWidget({
@@ -12,7 +16,6 @@ class CustomMCQWidget extends StatefulWidget {
     required this.questions,
     required this.quizTitle,
     required this.quizId,
-    // Required theme parameter
     this.onAnswerSubmitted,
   });
 
@@ -20,8 +23,7 @@ class CustomMCQWidget extends StatefulWidget {
   State<CustomMCQWidget> createState() => _CustomMCQWidgetState();
 }
 
-class _CustomMCQWidgetState extends State<CustomMCQWidget>
-    with TickerProviderStateMixin {
+class _CustomMCQWidgetState extends State<CustomMCQWidget> with TickerProviderStateMixin {
   int currentQuestionIndex = 0;
   int points = 0;
   String? selectedAnswer;
@@ -29,20 +31,15 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   bool isAnswerSubmitted = false;
   bool isQuizCompleted = false;
 
-  // Store answers for each question
   Map<int, String> userAnswers = {};
   Map<int, bool> questionResults = {};
   Set<int> viewedQuestions = {};
-
-  // Audio
 
   late AnimationController _pulseController;
   late AnimationController _slideController;
   late AnimationController _scaleController;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _scaleAnimation;
-
-  // Theme gradients and text colors
 
   @override
   void initState() {
@@ -94,18 +91,19 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   }
 
   void selectAnswer(String answer) {
-    if (userAnswers.containsKey(currentQuestionIndex) || isQuizCompleted)
-      return;
+    if (userAnswers.containsKey(currentQuestionIndex) || isQuizCompleted) return;
     setState(() {
       selectedAnswer = answer;
     });
   }
 
   void submitAnswer() {
-    if (selectedAnswer == null ||
-        userAnswers.containsKey(currentQuestionIndex) ||
-        isQuizCompleted)
+    if (selectedAnswer == null) {
+      _showIncompleteQuizDialog();
       return;
+    }
+
+    if (userAnswers.containsKey(currentQuestionIndex) || isQuizCompleted) return;
 
     setState(() {
       isAnswerSubmitted = true;
@@ -113,39 +111,27 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
     });
 
     final q = widget.questions[currentQuestionIndex];
-    final List<dynamic> opts =
-        (q['options'] is List) ? q['options'] as List : <dynamic>[];
-    String? correctAnswerText =
-        (q['answer'] as String?) ?? (q['correctAnswer'] as String?);
+    final List<dynamic> opts = (q['options'] is List) ? q['options'] as List : <dynamic>[];
+    String? correctAnswerText = (q['answer'] as String?) ?? (q['correctAnswer'] as String?);
     bool isCorrect;
 
     if (opts.isNotEmpty && opts.first is Map) {
       dynamic match;
       try {
         match = opts.firstWhere(
-          (o) =>
-              ((o['optionText'] ?? o['text'] ?? o['value'] ?? '').toString()) ==
-              selectedAnswer,
+          (o) => ((o['optionText'] ?? o['text'] ?? o['value'] ?? '').toString()) == selectedAnswer,
         );
       } catch (_) {
         match = null;
       }
-      isCorrect =
-          match != null &&
-          ((match['isCorrect'] == true) ||
-              (match['correct'] == true) ||
-              (match['answer'] == true));
+      isCorrect = match != null &&
+          ((match['isCorrect'] == true) || (match['correct'] == true) || (match['answer'] == true));
       if (correctAnswerText == null) {
         try {
           final corr = opts.firstWhere(
-            (o) =>
-                o['isCorrect'] == true ||
-                o['correct'] == true ||
-                o['answer'] == true,
+            (o) => o['isCorrect'] == true || o['correct'] == true || o['answer'] == true,
           );
-          correctAnswerText =
-              (corr['optionText'] ?? corr['text'] ?? corr['value'] ?? '')
-                  .toString();
+          correctAnswerText = (corr['optionText'] ?? corr['text'] ?? corr['value'] ?? '').toString();
         } catch (_) {
           correctAnswerText = '';
         }
@@ -157,27 +143,21 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
     questionResults[currentQuestionIndex] = isCorrect;
     widget.onAnswerSubmitted?.call(q['questionId'], isCorrect);
 
-    _saveProgress(); // Always persist progress (answers/results), even if incorrect
+    _saveProgress();
 
     if (isCorrect) {
       setState(() {
         points += 10;
       });
-      _showEnhancedDialog(
-        title: 'Fantastic! 🎉',
-        message:
-            (widget.questions[currentQuestionIndex]['funFact'] as String? ??
-                widget.questions[currentQuestionIndex]['explanation']
-                    as String? ??
-                ''),
-        isSuccess: true,
-        onPressed: _handleDialogContinue,
-      );
+      if (currentQuestionIndex < widget.questions.length - 1) {
+        _nextQuestion();
+      } else {
+        _checkQuizCompletion();
+      }
     } else {
       _showEnhancedDialog(
         title: 'Almost there! 🤔',
-        message:
-            'That\'s not quite right. The correct answer is $correctAnswerText. '
+        message: 'That\'s not quite right. The correct answer is $correctAnswerText. '
             '${(widget.questions[currentQuestionIndex]['funFact'] as String? ?? widget.questions[currentQuestionIndex]['explanation'] as String? ?? '')}',
         isSuccess: false,
         onPressed: _handleDialogContinue,
@@ -194,69 +174,68 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder:
-          (context) => ScaleTransition(
-            scale: _scaleAnimation,
-            child: AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+      builder: (context) => ScaleTransition(
+        scale: _scaleAnimation,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: Colors.white,
+          title: Row(
+            children: [
+              Icon(
+                isSuccess ? Icons.check_circle : Icons.error_outline,
+                color: isSuccess ? Colors.green[600] : Colors.red[600],
+                size: 30,
               ),
-              backgroundColor: Colors.white,
-              title: Row(
-                children: [
-                  Icon(
-                    isSuccess ? Icons.check_circle : Icons.error_outline,
-                    color: isSuccess ? Colors.green[600] : Colors.red[600],
-                    size: 30,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: GoogleFonts.poppins(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              content: SingleChildScrollView(
+              const SizedBox(width: 12),
+              Expanded(
                 child: Text(
-                  message.isEmpty ? 'No additional info available.' : message,
+                  title,
                   style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    color: Colors.grey[800],
-                    height: 1.4,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black,
                   ),
                 ),
               ),
-              actions: [
-                ElevatedButton(
-                  onPressed: onPressed,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple[600],
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                  ),
-                  child: Text(
-                    'Continue',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Text(
+              message.isEmpty ? 'No additional info available.' : message,
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                color: Colors.grey[800],
+                height: 1.4,
+              ),
             ),
           ),
+          actions: [
+            ElevatedButton(
+              onPressed: onPressed,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple[600],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+              ),
+              child: Text(
+                'Continue',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -304,13 +283,78 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
 
   void _checkQuizCompletion() async {
     if (isQuizCompleted) {
-      return; // Stay in review mode
+      return;
     }
-    if (userAnswers.length == widget.questions.length) {
+    final int total = widget.questions.length;
+    final int correctCount = questionResults.values.where((b) => b).length;
+    final bool passed = correctCount > (total / 2);
+    final bool allAnswered = userAnswers.length == total;
+
+    if (allAnswered && passed) {
       await _markCompleted();
       Get.off(() => Dashboard(totalPoints: points));
-    } else {
+    } else if (!allAnswered) {
       _showIncompleteQuizDialog();
+    } else {
+      // All answered but score <= 50%: reset attempt without awarding badge
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('progress_${widget.quizId}');
+      await prefs.remove('answers_${widget.quizId}');
+      await prefs.remove('results_${widget.quizId}');
+      await prefs.remove('current_attempt_${widget.quizId}');
+
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            'Keep Trying!',
+            style: GoogleFonts.poppins(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
+            ),
+          ),
+          content: Text(
+            'You answered $correctCount out of $total correctly.\n\nYou need more than half correct to complete and earn a badge. The quiz will reset now.',
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              color: Colors.grey[800],
+              height: 1.4,
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Get.off(() => CustomMCQWidget(
+                      questions: widget.questions,
+                      quizTitle: widget.quizTitle,
+                      quizId: widget.quizId,
+                      onAnswerSubmitted: widget.onAnswerSubmitted,
+                    ));
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple[600],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Try Again',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
     }
   }
 
@@ -326,70 +370,98 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
 
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: Text(
-              'Quiz Not Complete',
-              style: GoogleFonts.poppins(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
-              ),
-            ),
-            content: Text(
-              'You have ${unanswered.length} unanswered question(s): ${unanswered.join(", ")}.\n\nWould you like to go back and answer them?',
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          'Quiz Not Complete',
+          style: GoogleFonts.poppins(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: Colors.black,
+          ),
+        ),
+        content: Text(
+          'You have ${unanswered.length} unanswered question(s): ${unanswered.join(", ")}.\n\nWould you like to go back and answer them or reset the quiz?',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            color: Colors.grey[800],
+            height: 1.4,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              // Reset the quiz completely (attempt only) without revoking prior completion/points
+              final prefs = await SharedPreferences.getInstance();
+              setState(() {
+                userAnswers.clear();
+                questionResults.clear();
+                points = 0;
+                currentQuestionIndex = 0;
+                selectedAnswer = null;
+                isAnswerSubmitted = false;
+                // keep prior completion state as-is; we're resetting only this attempt
+                viewedQuestions.clear();
+                viewedQuestions.add(0);
+                _slideController.reset();
+                _scaleController.reset();
+                _startAnimations();
+              });
+              await prefs.remove('progress_${widget.quizId}');
+              await prefs.remove('answers_${widget.quizId}');
+              await prefs.remove('results_${widget.quizId}');
+              await prefs.remove('current_attempt_${widget.quizId}');
+              // Navigate back to the quiz start
+              Get.off(() => CustomMCQWidget(
+                    questions: widget.questions,
+                    quizTitle: widget.quizTitle,
+                    quizId: widget.quizId,
+                    onAnswerSubmitted: widget.onAnswerSubmitted,
+                  ));
+            },
+            child: Text(
+              'Reset Quiz',
               style: GoogleFonts.poppins(
                 fontSize: 16,
-                color: Colors.grey[800],
-                height: 1.4,
+                color: Colors.red[600],
+                fontWeight: FontWeight.w600,
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _markCompleted();
-                  Get.off(() => Dashboard(totalPoints: points));
-                },
-                child: Text(
-                  'Submit Anyway',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    color: Colors.red[600],
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  setState(() {
-                    currentQuestionIndex = unanswered.first - 1;
-                    selectedAnswer = null;
-                    isAnswerSubmitted = false;
-                  });
-                },
-                child: Text(
-                  'Go to Question',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple[600],
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ],
           ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                currentQuestionIndex = unanswered.first - 1;
+                selectedAnswer = null;
+                isAnswerSubmitted = false;
+                viewedQuestions.add(currentQuestionIndex);
+                _slideController.reset();
+                _scaleController.reset();
+                _startAnimations();
+              });
+            },
+            child: Text(
+              'Go to Question',
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purple[600],
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -407,9 +479,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
     final isCompleted = prefs.getBool('completed_${widget.quizId}') ?? false;
     if (!mounted) return;
     setState(() {
-      final maxIndex =
-          widget.questions.isEmpty ? 0 : (widget.questions.length - 1);
-      // Restore previous answers
+      final maxIndex = widget.questions.isEmpty ? 0 : (widget.questions.length - 1);
       userAnswers.clear();
       questionResults.clear();
       if (answersJson != null && answersJson.isNotEmpty) {
@@ -430,12 +500,9 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
           });
         } catch (_) {}
       }
-      // Calculate points from results
       points = questionResults.values.where((b) => b).length * 10;
       isQuizCompleted = isCompleted;
-      // Mark viewed questions as those already answered
       viewedQuestions.addAll(userAnswers.keys);
-      // Jump to first unanswered if any; otherwise use saved index
       int? firstUnanswered;
       for (int i = 0; i < widget.questions.length; i++) {
         if (!userAnswers.containsKey(i)) {
@@ -448,13 +515,15 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
       selectedAnswer = userAnswers[currentQuestionIndex];
       isAnswerSubmitted = userAnswers.containsKey(currentQuestionIndex);
     });
-    // Handle auto-completion if all answered but not marked
-    if (mounted &&
-        userAnswers.length == widget.questions.length &&
-        !isQuizCompleted) {
-      await _markCompleted();
-      if (mounted) {
-        Get.off(() => Dashboard(totalPoints: points));
+    if (mounted && userAnswers.length == widget.questions.length && !isQuizCompleted) {
+      final int total = widget.questions.length;
+      final int correctCount = questionResults.values.where((b) => b).length;
+      final bool passed = correctCount > (total / 2);
+      if (passed) {
+        await _markCompleted();
+        if (mounted) {
+          Get.off(() => Dashboard(totalPoints: points));
+        }
       }
     }
     _saveProgress();
@@ -463,7 +532,6 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   Future<void> _saveProgress() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('progress_${widget.quizId}', currentQuestionIndex);
-    // Persist answers and correctness so UI can restore review mode
     final encodedAnswers = jsonEncode(
       userAnswers.map((k, v) => MapEntry(k.toString(), v)),
     );
@@ -477,6 +545,8 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   Future<void> _markCompleted() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('completed_${widget.quizId}', true);
+    await prefs.setInt('points_${widget.quizId}', points);
+    await prefs.remove('current_attempt_${widget.quizId}');
     await prefs.remove('progress_${widget.quizId}');
     final badges = prefs.getStringList('badges') ?? [];
     if (!badges.contains(widget.quizId)) {
@@ -492,22 +562,15 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
 
   String? _getCorrectAnswer(int index) {
     final q = widget.questions[index];
-    final List<dynamic> opts =
-        (q['options'] is List) ? q['options'] as List : <dynamic>[];
-    String? correctAnswerText =
-        (q['answer'] as String?) ?? (q['correctAnswer'] as String?);
+    final List<dynamic> opts = (q['options'] is List) ? q['options'] as List : <dynamic>[];
+    String? correctAnswerText = (q['answer'] as String?) ?? (q['correctAnswer'] as String?);
 
     if (correctAnswerText == null && opts.isNotEmpty && opts.first is Map) {
       try {
         final corr = opts.firstWhere(
-          (o) =>
-              o['isCorrect'] == true ||
-              o['correct'] == true ||
-              o['answer'] == true,
+          (o) => o['isCorrect'] == true || o['correct'] == true || o['answer'] == true,
         );
-        correctAnswerText =
-            (corr['optionText'] ?? corr['text'] ?? corr['value'] ?? '')
-                .toString();
+        correctAnswerText = (corr['optionText'] ?? corr['text'] ?? corr['value'] ?? '').toString();
       } catch (_) {
         correctAnswerText = null;
       }
@@ -529,79 +592,76 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
       ),
       child: Scaffold(
         appBar: _buildEnhancedAppBar(context),
-        body:
-            widget.questions.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Colors.blue[100]!,
-                        Colors.green[100]!,
-                        Colors.orange[50]!,
-                        Colors.blue[50]!,
-                      ],
-                      stops: const [0.0, 0.3, 0.7, 1.0],
-                    ),
+        body: widget.questions.isEmpty
+            ? const Center(child: CircularProgressIndicator())
+            : Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.blue[100]!,
+                      Colors.green[100]!,
+                      Colors.orange[50]!,
+                      Colors.blue[50]!,
+                    ],
+                    stops: const [0.0, 0.3, 0.7, 1.0],
                   ),
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                          child: Column(
-                            children: [
-                              _buildQuestionNavigator(),
-                              const SizedBox(height: 12),
-                              _buildPointsDisplay(),
-                              const SizedBox(height: 12),
-                            ],
-                          ),
+                ),
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                        child: Column(
+                          children: [
+                            _buildQuestionNavigator(),
+                            const SizedBox(height: 12),
+                            _buildPointsDisplay(),
+                            const SizedBox(height: 12),
+                          ],
                         ),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            physics: const BouncingScrollPhysics(),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                              ),
-                              child: Column(
-                                children: [
-                                  const SizedBox(height: 10),
-                                  _buildQuestionCard(),
+                      ),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 10),
+                                _buildQuestionCard(),
+                                const SizedBox(height: 16),
+                                if (showHint) ...[
+                                  _buildHintCard(),
                                   const SizedBox(height: 16),
-                                  if (showHint) ...[
-                                    _buildHintCard(),
-                                    const SizedBox(height: 16),
-                                  ],
-                                  _buildAnswerOptions(),
-                                  const SizedBox(height: 20),
                                 ],
-                              ),
+                                _buildAnswerOptions(),
+                                const SizedBox(height: 20),
+                              ],
                             ),
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.9),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, -5),
-                              ),
-                            ],
-                          ),
-                          child: _buildActionButtons(),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, -5),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                        child: _buildActionButtons(),
+                      ),
+                    ],
                   ),
                 ),
+              ),
       ),
     );
   }
@@ -727,6 +787,9 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                   isAnswerSubmitted = userAnswers.containsKey(index);
                   viewedQuestions.add(index);
                   showHint = false;
+                  _slideController.reset();
+                  _scaleController.reset();
+                  _startAnimations();
                 });
               },
               child: AnimatedContainer(
@@ -736,10 +799,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                 decoration: BoxDecoration(
                   color: bgColor,
                   shape: BoxShape.circle,
-                  border:
-                      isCurrent
-                          ? Border.all(color: Colors.white, width: 3)
-                          : null,
+                  border: isCurrent ? Border.all(color: Colors.white, width: 3) : null,
                   boxShadow: [
                     BoxShadow(
                       color: bgColor.withOpacity(0.4),
@@ -749,17 +809,16 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                   ],
                 ),
                 child: Center(
-                  child:
-                      icon != null
-                          ? Icon(icon, color: Colors.white, size: 20)
-                          : Text(
-                            '${index + 1}',
-                            style: GoogleFonts.poppins(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                              fontSize: isCurrent ? 16 : 14,
-                            ),
+                  child: icon != null
+                      ? Icon(icon, color: Colors.white, size: 20)
+                      : Text(
+                          '${index + 1}',
+                          style: GoogleFonts.poppins(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: isCurrent ? 16 : 14,
                           ),
+                        ),
                 ),
               ),
             ),
@@ -832,8 +891,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
       child: Column(
         children: [
           Text(
-            (questionData['questionText'] ?? questionData['question'] ?? '')
-                .toString(),
+            (questionData['questionText'] ?? questionData['question'] ?? '').toString(),
             style: GoogleFonts.poppins(
               fontSize: 22,
               fontWeight: FontWeight.w700,
@@ -851,12 +909,10 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   Widget _buildHintCard() {
     final questionData = widget.questions[currentQuestionIndex];
     final hintText = questionData['hint'] as String? ?? 'Keep trying!';
-    final imagePath =
-        questionData['imageUrl'] as String? ??
+    final imagePath = questionData['imageUrl'] as String? ??
         questionData['image'] as String? ??
         questionData['imagePath'] as String?;
-    final hintImage =
-        questionData['hintImage'] as String? ??
+    final hintImage = questionData['hintImage'] as String? ??
         questionData['hintImageUrl'] as String? ??
         questionData['hintImagePath'] as String?;
 
@@ -865,8 +921,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
     String? networkImageUrl;
     String? networkHintImageUrl;
     if (normalizedImage.isNotEmpty) {
-      if (normalizedImage.startsWith('http') ||
-          normalizedImage.startsWith('data:')) {
+      if (normalizedImage.startsWith('http') || normalizedImage.startsWith('data:')) {
         networkImageUrl = normalizedImage;
       } else if (normalizedImage.startsWith('/')) {
         networkImageUrl = ApiConfig.baseHost + normalizedImage.substring(1);
@@ -875,12 +930,10 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
       }
     }
     if (normalizedHintImage.isNotEmpty) {
-      if (normalizedHintImage.startsWith('http') ||
-          normalizedHintImage.startsWith('data:')) {
+      if (normalizedHintImage.startsWith('http') || normalizedHintImage.startsWith('data:')) {
         networkHintImageUrl = normalizedHintImage;
       } else if (normalizedHintImage.startsWith('/')) {
-        networkHintImageUrl =
-            ApiConfig.baseHost + normalizedHintImage.substring(1);
+        networkHintImageUrl = ApiConfig.baseHost + normalizedHintImage.substring(1);
       } else if (!normalizedHintImage.startsWith('assets/')) {
         networkHintImageUrl = ApiConfig.baseHost + normalizedHintImage;
       }
@@ -938,8 +991,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
               ),
             ],
           ),
-          if (showHint &&
-              (normalizedImage.isNotEmpty || normalizedHintImage.isNotEmpty))
+          if (showHint && (normalizedImage.isNotEmpty || normalizedHintImage.isNotEmpty))
             Padding(
               padding: const EdgeInsets.only(top: 12),
               child: Container(
@@ -955,86 +1007,81 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child:
-                      (normalizedHintImage.isNotEmpty
-                          ? (networkHintImageUrl != null
-                              ? Image.network(
-                                networkHintImageUrl,
+                  child: (normalizedHintImage.isNotEmpty
+                      ? (networkHintImageUrl != null
+                          ? Image.network(
+                              networkHintImageUrl,
+                              height: 100,
+                              width: double.infinity,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => Container(
                                 height: 100,
-                                width: double.infinity,
-                                fit: BoxFit.contain,
-                                errorBuilder:
-                                    (context, error, stackTrace) => Container(
-                                      height: 100,
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[200],
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Icon(
-                                        Icons.image_not_supported,
-                                        color: Colors.grey[400],
-                                        size: 40,
-                                      ),
-                                    ),
-                              )
-                              : Image.asset(
-                                normalizedHintImage,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  color: Colors.grey[400],
+                                  size: 40,
+                                ),
+                              ),
+                            )
+                          : Image.asset(
+                              normalizedHintImage,
+                              height: 100,
+                              width: double.infinity,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => Container(
                                 height: 100,
-                                width: double.infinity,
-                                fit: BoxFit.contain,
-                                errorBuilder:
-                                    (context, error, stackTrace) => Container(
-                                      height: 100,
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[200],
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Icon(
-                                        Icons.image_not_supported,
-                                        color: Colors.grey[400],
-                                        size: 40,
-                                      ),
-                                    ),
-                              ))
-                          : (networkImageUrl != null
-                              ? Image.network(
-                                networkImageUrl,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  color: Colors.grey[400],
+                                  size: 40,
+                                ),
+                              ),
+                            ))
+                      : (networkImageUrl != null
+                          ? Image.network(
+                              networkImageUrl,
+                              height: 100,
+                              width: double.infinity,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => Container(
                                 height: 100,
-                                width: double.infinity,
-                                fit: BoxFit.contain,
-                                errorBuilder:
-                                    (context, error, stackTrace) => Container(
-                                      height: 100,
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[200],
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Icon(
-                                        Icons.image_not_supported,
-                                        color: Colors.grey[400],
-                                        size: 40,
-                                      ),
-                                    ),
-                              )
-                              : Image.asset(
-                                normalizedImage,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  color: Colors.grey[400],
+                                  size: 40,
+                                ),
+                              ),
+                            )
+                          : Image.asset(
+                              normalizedImage,
+                              height: 100,
+                              width: double.infinity,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => Container(
                                 height: 100,
-                                width: double.infinity,
-                                fit: BoxFit.contain,
-                                errorBuilder:
-                                    (context, error, stackTrace) => Container(
-                                      height: 100,
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[200],
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Icon(
-                                        Icons.image_not_supported,
-                                        color: Colors.grey[400],
-                                        size: 40,
-                                      ),
-                                    ),
-                              ))),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  color: Colors.grey[400],
+                                  size: 40,
+                                ),
+                              ),
+                            ))),
                 ),
               ),
             ),
@@ -1044,8 +1091,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   }
 
   Widget _buildAnswerOptions() {
-    final bool isReviewMode =
-        userAnswers.containsKey(currentQuestionIndex) || isQuizCompleted;
+    final bool isReviewMode = userAnswers.containsKey(currentQuestionIndex) || isQuizCompleted;
     final String? userAnswer = userAnswers[currentQuestionIndex];
     final String? correctAnswer = _getCorrectAnswer(currentQuestionIndex);
 
@@ -1060,20 +1106,13 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
             crossAxisSpacing: 12,
             childAspectRatio: constraints.maxWidth > 400 ? 1.8 : 1.6,
           ),
-          itemCount:
-              ((widget.questions[currentQuestionIndex]['options'] as List?) ??
-                      const [])
-                  .length,
+          itemCount: ((widget.questions[currentQuestionIndex]['options'] as List?) ?? const []).length,
           itemBuilder: (context, index) {
-            final options =
-                (widget.questions[currentQuestionIndex]['options'] as List?) ??
-                const [];
+            final options = (widget.questions[currentQuestionIndex]['options'] as List?) ?? const [];
             final opt = options[index];
-            final String option =
-                (opt is Map)
-                    ? (opt['optionText'] ?? opt['text'] ?? opt['value'] ?? '')
-                        .toString()
-                    : opt.toString();
+            final String option = (opt is Map)
+                ? (opt['optionText'] ?? opt['text'] ?? opt['value'] ?? '').toString()
+                : opt.toString();
 
             bool isSelected = selectedAnswer == option;
             bool isUserAnswer = userAnswer == option;
@@ -1101,8 +1140,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                 buttonColor = Colors.grey[400]!;
               }
             } else {
-              buttonColor =
-                  isSelected ? Colors.blue[500]! : Colors.orange[400]!;
+              buttonColor = isSelected ? Colors.blue[500]! : Colors.orange[400]!;
             }
 
             return TweenAnimationBuilder(
@@ -1129,24 +1167,19 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
                             offset: const Offset(0, 6),
                           ),
                         ],
-                        border:
-                            (isSelected || isUserAnswer)
-                                ? Border.all(color: Colors.white, width: 2.5)
-                                : null,
+                        border: (isSelected || isUserAnswer) ? Border.all(color: Colors.white, width: 2.5) : null,
                       ),
                       child: Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          onTap:
-                              isReviewMode ? null : () => selectAnswer(option),
+                          onTap: isReviewMode ? null : () => selectAnswer(option),
                           borderRadius: BorderRadius.circular(16),
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                if (icon != null)
-                                  Icon(icon, color: Colors.white, size: 22),
+                                if (icon != null) Icon(icon, color: Colors.white, size: 22),
                                 if (icon != null) const SizedBox(height: 6),
                                 Flexible(
                                   child: Text(
@@ -1179,8 +1212,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
   }
 
   Widget _buildActionButtons() {
-    final bool isReviewMode =
-        userAnswers.containsKey(currentQuestionIndex) || isQuizCompleted;
+    final bool isReviewMode = userAnswers.containsKey(currentQuestionIndex) || isQuizCompleted;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -1190,10 +1222,7 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
             child: ElevatedButton(
               onPressed: currentQuestionIndex > 0 ? _previousQuestion : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    currentQuestionIndex > 0
-                        ? Colors.blue[600]
-                        : Colors.grey[400],
+                backgroundColor: currentQuestionIndex > 0 ? Colors.blue[600] : Colors.grey[400],
                 foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -1272,15 +1301,9 @@ class _CustomMCQWidgetState extends State<CustomMCQWidget>
           child: Padding(
             padding: const EdgeInsets.only(left: 8),
             child: ElevatedButton(
-              onPressed:
-                  isReviewMode
-                      ? _nextQuestion
-                      : (selectedAnswer != null ? submitAnswer : null),
+              onPressed: isReviewMode ? _nextQuestion : (selectedAnswer != null ? submitAnswer : null),
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    isReviewMode || selectedAnswer != null
-                        ? Colors.blue[600]
-                        : Colors.grey[400],
+                backgroundColor: isReviewMode || selectedAnswer != null ? Colors.blue[600] : Colors.grey[400],
                 foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),

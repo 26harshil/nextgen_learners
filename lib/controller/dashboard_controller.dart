@@ -44,7 +44,7 @@ class DashboardController extends GetxController {
     print('Vehicles Quiz: $vehicleName');
     print('Animals Quiz: $animalName');
     print('Birds Quiz: $birds');
-     print('Birds Quiz: $sounds');
+    print('Sounds Quiz: $sounds');
     print('---------------------');
   }
 }

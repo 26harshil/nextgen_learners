@@ -1,3 +1,11 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:just_audio/just_audio.dart';
+import 'dart:math' as math;
+import 'dart:convert';
+
 import 'package:nextgen_learners/constant/import_export.dart';
 
 class AnimalSoundView extends StatefulWidget {
@@ -14,8 +22,7 @@ class AnimalSoundView extends StatefulWidget {
   _AnimalSoundViewState createState() => _AnimalSoundViewState();
 }
 
-class _AnimalSoundViewState extends State<AnimalSoundView>
-    with TickerProviderStateMixin {
+class _AnimalSoundViewState extends State<AnimalSoundView> with TickerProviderStateMixin {
   int currentQuestionIndex = 0;
   int points = 0;
   bool showHint = false;
@@ -25,7 +32,6 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isLoading = false;
 
-  // Add these for tracking
   Map<int, String> userAnswers = {};
   Map<int, bool> questionResults = {};
   Set<int> viewedQuestions = {0};
@@ -41,7 +47,6 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
   late Animation<Offset> _slideAnimation;
   late Animation<double> _pulseAnimation;
   late Animation<double> _confettiAnimation;
-
 
   @override
   void initState() {
@@ -99,8 +104,6 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
       CurvedAnimation(parent: _confettiController, curve: Curves.easeOut),
     );
 
-
-
     _slideController.forward();
     _startPulseAnimation();
   }
@@ -113,13 +116,38 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     final prefs = await SharedPreferences.getInstance();
     final savedIndex = prefs.getInt('progress_${widget.quizId}') ?? 0;
     final savedPoints = prefs.getInt('points_${widget.quizId}') ?? 0;
+    final savedAnswersStr = prefs.getString('answers_${widget.quizId}');
+    Map<int, String> loadedAnswers = {};
+    if (savedAnswersStr != null) {
+      final Map<String, String> decoded = json.decode(savedAnswersStr);
+      loadedAnswers = decoded.map((k, v) => MapEntry(int.parse(k), v));
+    }
+    final savedResultsStr = prefs.getString('results_${widget.quizId}');
+    Map<int, bool> loadedResults = {};
+    if (savedResultsStr != null) {
+      final Map<String, bool> decoded = json.decode(savedResultsStr);
+      loadedResults = decoded.map((k, v) => MapEntry(int.parse(k), v));
+    }
+    final savedViewedStr = prefs.getString('viewed_${widget.quizId}');
+    Set<int> loadedViewed = {0};
+    if (savedViewedStr != null) {
+      final List<String> decoded = json.decode(savedViewedStr);
+      loadedViewed = decoded.map((s) => int.parse(s)).toSet();
+    }
     if (!mounted) return;
     setState(() {
-      final maxIndex =
-          widget.questions.isEmpty ? 0 : (widget.questions.length - 1);
+      final maxIndex = widget.questions.isEmpty ? 0 : (widget.questions.length - 1);
       currentQuestionIndex = savedIndex.clamp(0, maxIndex);
       points = savedPoints;
+      userAnswers = loadedAnswers;
+      questionResults = loadedResults;
+      viewedQuestions = loadedViewed;
       viewedQuestions.add(currentQuestionIndex);
+      selectedAnswer = userAnswers[currentQuestionIndex];
+      hasSubmitted = userAnswers.containsKey(currentQuestionIndex);
+      isAnswerSubmitted = hasSubmitted;
+      showHint = false;
+      showFunFact = false;
     });
     if (widget.questions.isNotEmpty) {
       _playSound();
@@ -130,18 +158,78 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('progress_${widget.quizId}', currentQuestionIndex);
     await prefs.setInt('points_${widget.quizId}', points);
+    final encodedAnswers = json.encode(
+      userAnswers.map((k, v) => MapEntry(k.toString(), v)),
+    );
+    final encodedResults = json.encode(
+      questionResults.map((k, v) => MapEntry(k.toString(), v)),
+    );
+    final encodedViewed = json.encode(viewedQuestions.map((i) => i.toString()).toList());
+    await prefs.setString('answers_${widget.quizId}', encodedAnswers);
+    await prefs.setString('results_${widget.quizId}', encodedResults);
+    await prefs.setString('viewed_${widget.quizId}', encodedViewed);
+  }
+
+  Future<void> _resetQuiz() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('progress_${widget.quizId}');
+    await prefs.remove('points_${widget.quizId}');
+    await prefs.remove('answers_${widget.quizId}');
+    await prefs.remove('results_${widget.quizId}');
+    await prefs.remove('viewed_${widget.quizId}');
+    await prefs.remove('completed_${widget.quizId}');
+    final badges = prefs.getStringList('badges') ?? [];
+    badges.remove(widget.quizId);
+    await prefs.setStringList('badges', badges);
+    setState(() {
+      userAnswers.clear();
+      questionResults.clear();
+      viewedQuestions.clear();
+      viewedQuestions.add(0);
+      currentQuestionIndex = 0;
+      points = 0;
+      selectedAnswer = null;
+      hasSubmitted = false;
+      isAnswerSubmitted = false;
+      showHint = false;
+      showFunFact = false;
+      _slideController.reset();
+      _slideController.forward();
+    });
+    await _playSound();
+    Get.off(() => AnimalSoundView(
+          questions: widget.questions,
+          quizId: widget.quizId,
+        ));
   }
 
   Future<void> _markCompleted() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('completed_${widget.quizId}', true);
+    
+    // Check if all questions are attempted
+    final allQuestionsAttempted = userAnswers.length == widget.questions.length;
+    
+    // Count correct answers
+    final correctCount = questionResults.values.where((result) => result).length;
+    final halfQuestions = widget.questions.length / 2.0;
+    final halfCorrect = correctCount >= halfQuestions;
+    
+    // Only mark as completed and award badge if all questions attempted and at least half are correct
+    if (allQuestionsAttempted && halfCorrect) {
+      await prefs.setBool('completed_${widget.quizId}', true);
+      final badges = prefs.getStringList('badges') ?? [];
+      if (!badges.contains(widget.quizId)) {
+        badges.add(widget.quizId);
+        await prefs.setStringList('badges', badges);
+      }
+    }
+    
+    // Always clear progress data
     await prefs.remove('progress_${widget.quizId}');
     await prefs.remove('points_${widget.quizId}');
-    final badges = prefs.getStringList('badges') ?? [];
-    if (!badges.contains(widget.quizId)) {
-      badges.add(widget.quizId);
-      await prefs.setStringList('badges', badges);
-    }
+    await prefs.remove('answers_${widget.quizId}');
+    await prefs.remove('results_${widget.quizId}');
+    await prefs.remove('viewed_${widget.quizId}');
   }
 
   @override
@@ -156,8 +244,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
   }
 
   Future<void> _playSound() async {
-    final soundPath =
-        widget.questions[currentQuestionIndex]['soundUrl']?.toString() ?? '';
+    final soundPath = widget.questions[currentQuestionIndex]['soundUrl']?.toString() ?? '';
     if (soundPath.isNotEmpty) {
       await playSound(soundPath);
     }
@@ -181,8 +268,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
 
       String audioUrl = soundPath;
       if (!audioUrl.startsWith('http')) {
-        audioUrl =
-            'https://nextgen-learners-backend.onrender.com/sounds/$audioUrl';
+        audioUrl = ApiConfig.soundUrl(audioUrl);
       } else if (audioUrl.startsWith('http://')) {
         audioUrl = audioUrl.replaceFirst('http://', 'https://');
       }
@@ -221,8 +307,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
       if (mounted) {
         _showEnhancedAlert(
           title: 'Playback Error',
-          message:
-              'Could not play the sound. The server might be starting up. Please try again in a moment.',
+          message: 'Could not play the sound. The server might be starting up. Please try again in a moment.',
           icon: Icons.error_outline,
           color: Colors.red,
         );
@@ -235,6 +320,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
   }
 
   void selectAnswer(String answer) {
+    if (hasSubmitted || userAnswers.containsKey(currentQuestionIndex)) return;
     setState(() {
       selectedAnswer = answer;
       _scaleController.forward().then((_) => _scaleController.reverse());
@@ -243,11 +329,89 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
 
   void submitAnswer() {
     if (selectedAnswer == null) {
-      _showEnhancedAlert(
-        title: 'Oops! 😺',
-        message: 'Please select an answer first!',
-        icon: Icons.warning,
-        color: Colors.orange,
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext ctx) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Row(
+              children: [
+                Icon(Icons.warning, color: Colors.orange, size: 28),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Incomplete Quiz',
+                    style: GoogleFonts.poppins(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.orange,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              currentQuestionIndex == widget.questions.length - 1
+                  ? 'You haven\'t selected an answer for the last question. Submit anyway to reset the quiz?'
+                  : 'You haven\'t selected an answer. Submit anyway to reset the quiz?',
+              style: GoogleFonts.poppins(fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
+                    child: Text(
+                      'Cancel',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      Navigator.of(ctx).pop();
+                      await _resetQuiz();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
+                    child: Text(
+                      'Submit Anyway',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
       );
       return;
     }
@@ -255,18 +419,13 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     setState(() {
       hasSubmitted = true;
       isAnswerSubmitted = true;
-      showFunFact = true;
       userAnswers[currentQuestionIndex] = selectedAnswer!;
-
-      final options =
-          widget.questions[currentQuestionIndex]['options'] as List<dynamic>? ??
-          [];
+      final options = widget.questions[currentQuestionIndex]['options'] as List<dynamic>? ?? [];
       final correctOption = options.firstWhere(
         (opt) => opt['isCorrect'] == true,
         orElse: () => {'optionText': ''},
       );
       final correctAnswer = correctOption['optionText']?.toString() ?? '';
-
       bool isCorrect = selectedAnswer == correctAnswer;
       questionResults[currentQuestionIndex] = isCorrect;
 
@@ -274,6 +433,19 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
         points += 10;
         _saveProgress();
         _confettiController.forward().then((_) => _confettiController.reset());
+        _nextQuestion();
+      } else {
+        showFunFact = true;
+        _showEnhancedAlert(
+          title: 'Incorrect Answer',
+          message: 'The correct answer is $correctAnswer. ${widget.questions[currentQuestionIndex]['funFact']?.toString() ?? ''}',
+          icon: Icons.close,
+          color: Colors.red,
+          onPressed: () {
+            Navigator.of(context).pop();
+            _nextQuestion();
+          },
+        );
       }
     });
   }
@@ -291,9 +463,13 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
         _slideController.reset();
         _slideController.forward();
       });
-      _saveProgress();
+      await _saveProgress();
       await _playSound();
     } else {
+      // Check if all questions are attempted before marking as completed
+      if (userAnswers.length == widget.questions.length) {
+        await _markCompleted();
+      }
       _showQuizComplete();
     }
   }
@@ -323,28 +499,40 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
 
   void _showQuizComplete() {
     final percentage = (points / (widget.questions.length * 10)) * 100;
+    final allQuestionsAttempted = userAnswers.length == widget.questions.length;
+    final correctCount = questionResults.values.where((result) => result).length;
+    final halfQuestions = widget.questions.length / 2.0;
+    final halfCorrect = correctCount >= halfQuestions;
     String message;
     String emoji;
+    Color alertColor = Colors.green;
+    IconData alertIcon = Icons.celebration;
 
-    if (percentage >= 80) {
-      message = 'Amazing! You\'re an animal sound expert! 🌟';
-      emoji = '🎉';
-    } else if (percentage >= 60) {
-      message = 'Great job! You know your animal sounds well! 👏';
-      emoji = '😊';
+    if (allQuestionsAttempted && halfCorrect) {
+      if (percentage >= 80) {
+        message = 'Amazing! You\'re an animal sound expert! 🌟 Achievement Unlocked!';
+        emoji = '🎉';
+      } else if (percentage >= 60) {
+        message = 'Great job! You know your animal sounds well! 👏 Achievement Unlocked!';
+        emoji = '😊';
+      } else {
+        message = 'Good effort! You answered at least half correctly! 💪 Achievement Unlocked!';
+        emoji = '🤗';
+      }
     } else {
-      message = 'Good try! Keep learning about animal sounds! 💪';
-      emoji = '🤗';
+      message = 'Nice try! Answer all questions and get at least half correct next time to unlock the achievement! 💪';
+      emoji = '😌';
+      alertColor = Colors.blue;
+      alertIcon = Icons.info;
     }
 
     _showEnhancedAlert(
       title: 'Quiz Complete! $emoji',
-      message:
-          '$message\n\nFinal Score: $points/${widget.questions.length * 10} points\n(${percentage.toStringAsFixed(0)}%)',
-      icon: Icons.celebration,
-      color: Colors.green,
-      onPressed: () async {
-        await _markCompleted();
+      message: '$message\n\nFinal Score: $points/${widget.questions.length * 10} points\n(${percentage.toStringAsFixed(0)}%)',
+      icon: alertIcon,
+      color: alertColor,
+      onPressed: () {
+        Navigator.of(context).pop();
         Get.off(() => Dashboard(totalPoints: points));
       },
     );
@@ -428,11 +616,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     );
   }
 
-  PreferredSizeWidget _buildCompactAppBar(
-    BuildContext context,
-    bool isSmallScreen,
-    Color currentColor,
-  ) {
+  PreferredSizeWidget _buildCompactAppBar(BuildContext context, bool isSmallScreen, Color currentColor) {
     return AppBar(
       leading: _buildBackButton(),
       title: Text(
@@ -450,14 +634,85 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: GestureDetector(
-        onTap: () => Get.back(),
+        onTap: () {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext ctx) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                title: Row(
+                  children: [
+                    Icon(Icons.warning, color: Colors.orange, size: 28),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Exit Quiz',
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.orange,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                content: Text(
+                  'Your progress will be saved. Do you want to exit the quiz?',
+                  style: GoogleFonts.poppins(fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+                actions: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () async {
+                          await _saveProgress();
+                          Navigator.of(ctx).pop();
+                          Get.back();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                        ),
+                        child: Text(
+                          'Exit',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          );
+        },
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Colors.white.withOpacity(0.3),
-                Colors.white.withOpacity(0.1),
-              ],
+              colors: [Colors.white.withOpacity(0.3), Colors.white.withOpacity(0.1)],
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.white.withOpacity(0.3)),
@@ -493,10 +748,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
         animation: _pulseAnimation,
         builder: (context, child) {
           return CustomPaint(
-            painter: FloatingShapesPainter(
-              animation: _pulseAnimation.value,
-              color: currentColor,
-            ),
+            painter: FloatingShapesPainter(animation: _pulseAnimation.value, color: currentColor),
             child: Container(),
           );
         },
@@ -505,98 +757,41 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
   }
 
   Widget _buildEnhancedMainContent(
-    BuildContext context,
-    Map<String, dynamic> currentQuestion,
-    double screenWidth,
-    double screenHeight,
-    bool isSmallScreen,
-    Color currentColor,
-  ) {
+      BuildContext context, Map<String, dynamic> currentQuestion, double screenWidth, double screenHeight, bool isSmallScreen, Color currentColor) {
     return SlideTransition(
       position: _slideAnimation,
       child: Column(
         children: [
-          // Question Navigator Progress Bar - Right after AppBar
           _buildQuestionNavigator(),
-          
-          // Top Section with padding
           Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: isSmallScreen ? 20.0 : 28.0,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20.0 : 28.0),
             child: Column(
               children: [
                 SizedBox(height: screenHeight * 0.02),
-                // Points Display
-                _buildEnhancedPointsDisplay(
-                  context,
-                  isSmallScreen,
-                  currentColor,
-                ),
+                _buildEnhancedPointsDisplay(context, isSmallScreen, currentColor),
                 SizedBox(height: screenHeight * 0.02),
-
-                // Sound Button
-                _buildEnhancedSoundButton(
-                  currentQuestion,
-                  isSmallScreen,
-                  currentColor,
-                  screenHeight,
-                ),
+                _buildEnhancedSoundButton(currentQuestion, isSmallScreen, currentColor, screenHeight),
                 SizedBox(height: screenHeight * 0.02),
-
-                // Question Text
-                _buildEnhancedQuestionCard(
-                  context,
-                  currentQuestion,
-                  screenWidth,
-                  isSmallScreen,
-                  currentColor,
-                ),
-
-                // Hint (if shown)
+                _buildEnhancedQuestionCard(context, currentQuestion, screenWidth, isSmallScreen, currentColor),
                 if (showHint)
                   Padding(
                     padding: EdgeInsets.only(top: screenHeight * 0.015),
-                    child: _buildCompactHint(
-                      context,
-                      currentQuestion,
-                      screenWidth,
-                      isSmallScreen,
-                    ),
+                    child: _buildCompactHint(context, currentQuestion, screenWidth, isSmallScreen),
                   ),
-
-                // Fun Fact (if shown)
                 if (showFunFact && hasSubmitted)
                   Padding(
                     padding: EdgeInsets.only(top: screenHeight * 0.015),
-                    child: _buildCompactFunFact(
-                      context,
-                      currentQuestion,
-                      screenWidth,
-                      isSmallScreen,
-                    ),
+                    child: _buildCompactFunFact(context, currentQuestion, screenWidth, isSmallScreen),
                   ),
               ],
             ),
           ),
-
-          // Answer Options - Expanded with padding
           Expanded(
             child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: isSmallScreen ? 20.0 : 28.0,
-                vertical: 12,
-              ),
-              child: _buildEnhancedAnswerGrid(
-                context,
-                currentQuestion,
-                isSmallScreen,
-                currentColor,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20.0 : 28.0, vertical: 12),
+              child: _buildEnhancedAnswerGrid(context, currentQuestion, isSmallScreen, currentColor),
             ),
           ),
-
-          // Bottom Navigation Section with padding
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -609,16 +804,8 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
               ],
             ),
             child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: isSmallScreen ? 16 : 20,
-                vertical: isSmallScreen ? 16 : 20,
-              ),
-              child: _buildBottomActionButtons(
-                context,
-                currentQuestion,
-                isSmallScreen,
-                currentColor,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 16 : 20, vertical: isSmallScreen ? 16 : 20),
+              child: _buildBottomActionButtons(context, currentQuestion, isSmallScreen, currentColor),
             ),
           ),
         ],
@@ -687,10 +874,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
                 decoration: BoxDecoration(
                   color: bgColor,
                   shape: BoxShape.circle,
-                  border:
-                      isCurrent
-                          ? Border.all(color: Colors.white, width: 3)
-                          : null,
+                  border: isCurrent ? Border.all(color: Colors.white, width: 3) : null,
                   boxShadow: [
                     BoxShadow(
                       color: bgColor.withOpacity(0.4),
@@ -700,17 +884,16 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
                   ],
                 ),
                 child: Center(
-                  child:
-                      icon != null
-                          ? Icon(icon, color: Colors.white, size: 22)
-                          : Text(
-                            '${index + 1}',
-                            style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: isCurrent ? 18 : 16,
-                            ),
+                  child: icon != null
+                      ? Icon(icon, color: Colors.white, size: 22)
+                      : Text(
+                          '${index + 1}',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: isCurrent ? 18 : 16,
                           ),
+                        ),
                 ),
               ),
             ),
@@ -720,20 +903,11 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     );
   }
 
-  Widget _buildEnhancedPointsDisplay(
-    BuildContext context,
-    bool isSmallScreen,
-    Color currentColor,
-  ) {
+  Widget _buildEnhancedPointsDisplay(BuildContext context, bool isSmallScreen, Color currentColor) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isSmallScreen ? 24 : 28,
-        vertical: isSmallScreen ? 12 : 14,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 24 : 28, vertical: isSmallScreen ? 12 : 14),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [currentColor.withOpacity(0.1), Colors.white],
-        ),
+        gradient: LinearGradient(colors: [currentColor.withOpacity(0.1), Colors.white]),
         borderRadius: BorderRadius.circular(30),
         border: Border.all(color: currentColor.withOpacity(0.3), width: 2),
       ),
@@ -757,12 +931,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     );
   }
 
-  Widget _buildEnhancedSoundButton(
-    Map<String, dynamic> currentQuestion,
-    bool isSmallScreen,
-    Color currentColor,
-    double screenHeight,
-  ) {
+  Widget _buildEnhancedSoundButton(Map<String, dynamic> currentQuestion, bool isSmallScreen, Color currentColor, double screenHeight) {
     return GestureDetector(
       onTap: () {
         final soundUrl = currentQuestion['soundUrl']?.toString();
@@ -788,10 +957,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [
-                    currentColor.withOpacity(0.8),
-                    currentColor.withOpacity(0.6),
-                  ],
+                  colors: [currentColor.withOpacity(0.8), currentColor.withOpacity(0.6)],
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -801,21 +967,18 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
                   ),
                 ],
               ),
-              child:
-                  _isLoading
-                      ? const Center(
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
-                          strokeWidth: 3,
-                        ),
-                      )
-                      : Icon(
-                        Icons.volume_up,
-                        size: screenHeight * 0.07,
-                        color: Colors.white,
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        strokeWidth: 3,
                       ),
+                    )
+                  : Icon(
+                      Icons.volume_up,
+                      size: screenHeight * 0.07,
+                      color: Colors.white,
+                    ),
             ),
           );
         },
@@ -823,20 +986,12 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     );
   }
 
-  Widget _buildEnhancedQuestionCard(
-    BuildContext context,
-    Map<String, dynamic> currentQuestion,
-    double screenWidth,
-    bool isSmallScreen,
-    Color currentColor,
-  ) {
+  Widget _buildEnhancedQuestionCard(BuildContext context, Map<String, dynamic> currentQuestion, double screenWidth, bool isSmallScreen, Color currentColor) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(isSmallScreen ? 18 : 22),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.white, currentColor.withOpacity(0.05)],
-        ),
+        gradient: LinearGradient(colors: [Colors.white, currentColor.withOpacity(0.05)]),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: currentColor.withOpacity(0.2), width: 2),
         boxShadow: [
@@ -848,20 +1003,14 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
         ],
       ),
       child: Text(
-        currentQuestion['questionText']?.toString() ??
-            'Which animal makes this sound?',
+        currentQuestion['questionText']?.toString() ?? 'Which animal makes this sound?',
         style: Theme.of(context).textTheme.bodyLarge,
         textAlign: TextAlign.center,
       ),
     );
   }
 
-  Widget _buildCompactHint(
-    BuildContext context,
-    Map<String, dynamic> currentQuestion,
-    double screenWidth,
-    bool isSmallScreen,
-  ) {
+  Widget _buildCompactHint(BuildContext context, Map<String, dynamic> currentQuestion, double screenWidth, bool isSmallScreen) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -889,12 +1038,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     );
   }
 
-  Widget _buildCompactFunFact(
-    BuildContext context,
-    Map<String, dynamic> currentQuestion,
-    double screenWidth,
-    bool isSmallScreen,
-  ) {
+  Widget _buildCompactFunFact(BuildContext context, Map<String, dynamic> currentQuestion, double screenWidth, bool isSmallScreen) {
     final options = (currentQuestion['options'] as List<dynamic>?) ?? [];
     final correctOption = options.firstWhere(
       (opt) => opt['isCorrect'] == true,
@@ -932,12 +1076,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     );
   }
 
-  Widget _buildEnhancedAnswerGrid(
-    BuildContext context,
-    Map<String, dynamic> currentQuestion,
-    bool isSmallScreen,
-    Color currentColor,
-  ) {
+  Widget _buildEnhancedAnswerGrid(BuildContext context, Map<String, dynamic> currentQuestion, bool isSmallScreen, Color currentColor) {
     final options = (currentQuestion['options'] as List<dynamic>?) ?? [];
     return GridView.builder(
       shrinkWrap: true,
@@ -956,26 +1095,12 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
           orElse: () => {'optionText': ''},
         );
         final correctAnswer = correctOption['optionText']?.toString() ?? '';
-        return _buildEnhancedAnswerButton(
-          context,
-          answer,
-          correctAnswer,
-          isSmallScreen,
-          currentColor,
-          index,
-        );
+        return _buildEnhancedAnswerButton(context, answer, correctAnswer, isSmallScreen, currentColor, index);
       },
     );
   }
 
-  Widget _buildEnhancedAnswerButton(
-    BuildContext context,
-    String answer,
-    String correctAnswer,
-    bool isSmallScreen,
-    Color currentColor,
-    int index,
-  ) {
+  Widget _buildEnhancedAnswerButton(BuildContext context, String answer, String correctAnswer, bool isSmallScreen, Color currentColor, int index) {
     bool isSelected = selectedAnswer == answer;
     bool isCorrect = answer == correctAnswer;
     bool showResult = hasSubmitted;
@@ -1005,16 +1130,10 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     }
 
     return GestureDetector(
-      onTap:
-          showResult
-              ? null
-              : () {
-                selectAnswer(answer);
-              },
+      onTap: showResult ? null : () => selectAnswer(answer),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        transform:
-            Matrix4.identity()..scale(isSelected && !showResult ? scale : 1.0),
+        transform: Matrix4.identity()..scale(isSelected && !showResult ? scale : 1.0),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -1052,16 +1171,10 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
     );
   }
 
-  Widget _buildBottomActionButtons(
-    BuildContext context,
-    Map<String, dynamic> currentQuestion,
-    bool isSmallScreen,
-    Color currentColor,
-  ) {
+  Widget _buildBottomActionButtons(BuildContext context, Map<String, dynamic> currentQuestion, bool isSmallScreen, Color currentColor) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        // Previous Button
         _buildActionButton(
           label: 'Previous',
           icon: Icons.arrow_back,
@@ -1070,8 +1183,6 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
           enabled: currentQuestionIndex > 0,
           isSmallScreen: isSmallScreen,
         ),
-
-        // Hint Button
         _buildActionButton(
           label: showHint ? 'Hide' : 'Hint',
           icon: showHint ? Icons.visibility_off : Icons.lightbulb,
@@ -1079,23 +1190,18 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
           onPressed: toggleHint,
           isSmallScreen: isSmallScreen,
         ),
-
-        // Submit/Next Button
         if (!hasSubmitted)
           _buildActionButton(
             label: 'Submit',
             icon: Icons.check,
             color: Colors.blue[600]!,
             onPressed: submitAnswer,
-            enabled: selectedAnswer != null,
+            enabled: true,
             isSmallScreen: isSmallScreen,
           )
         else
           _buildActionButton(
-            label:
-                currentQuestionIndex < widget.questions.length - 1
-                    ? 'Next'
-                    : 'Finish',
+            label: currentQuestionIndex < widget.questions.length - 1 ? 'Next' : 'Finish',
             icon: Icons.arrow_forward,
             color: Colors.green[600]!,
             onPressed: _nextQuestion,
@@ -1127,10 +1233,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
         backgroundColor: color,
         foregroundColor: Colors.white,
         disabledBackgroundColor: Colors.grey[300],
-        padding: EdgeInsets.symmetric(
-          horizontal: isSmallScreen ? 16 : 20,
-          vertical: isSmallScreen ? 12 : 14,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 16 : 20, vertical: isSmallScreen ? 12 : 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         elevation: enabled ? 6 : 2,
       ),
@@ -1164,9 +1267,7 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
       barrierDismissible: false,
       builder: (BuildContext ctx) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Row(
             children: [
               Icon(icon, color: color, size: 28),
@@ -1194,13 +1295,8 @@ class _AnimalSoundViewState extends State<AnimalSoundView>
                 onPressed: onPressed ?? () => Navigator.of(ctx).pop(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: color,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 40,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                 ),
                 child: Text(
                   'OK',
@@ -1226,19 +1322,17 @@ class FloatingShapesPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = color.withOpacity(0.03)
-          ..style = PaintingStyle.fill;
+    final paint = Paint()
+      ..color = color.withOpacity(0.03)
+      ..style = PaintingStyle.fill;
 
     for (int i = 0; i < 6; i++) {
       final x = (size.width * 0.15) + (i * size.width * 0.15);
-      final y =
-          (size.height * 0.1) + (sin((animation * 2 * pi) + (i * 0.5)) * 15);
+      final y = (size.height * 0.1) + (math.sin((animation * 2 * math.pi) + (i * 0.5)) * 15);
 
       canvas.drawCircle(
         Offset(x, y),
-        10 + (sin(animation * pi + i) * 5),
+        10 + (math.sin(animation * math.pi + i) * 5),
         paint,
       );
     }
@@ -1265,14 +1359,8 @@ class ConfettiPainter extends CustomPainter {
     ];
 
     for (int i = 0; i < 40; i++) {
-      final paint =
-          Paint()
-            ..color = colors[i % colors.length].withOpacity(
-              1.0 - (animation * 0.7),
-            );
-
-      final x =
-          (size.width * (i % 10) * 0.1) + (sin(animation * pi * 2 + i) * 20);
+      final paint = Paint()..color = colors[i % colors.length].withOpacity(1.0 - (animation * 0.7));
+      final x = (size.width * (i % 10) * 0.1) + (math.sin(animation * math.pi * 2 + i) * 20);
       final y = (animation * size.height * 1.5) - (i * 10);
 
       if (y > 0 && y < size.height) {

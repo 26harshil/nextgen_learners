@@ -1,7 +1,9 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:nextgen_learners/constant/import_export.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -76,6 +78,10 @@ class MyApp extends StatelessWidget {
         GetPage(
           name: BIRDS_SCREEN,
           page: () => const QuizScreen(quizId: 'birds', ),
+        ),
+        GetPage(
+          name: FEEDBACK_SCREEN,
+          page: () => const FeedbackScreen(),
         ),
       ],
     );
